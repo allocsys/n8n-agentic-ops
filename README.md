@@ -7,6 +7,26 @@ or escalated** — without a human manually triaging every message.
 This repo is a portfolio piece: an importable `workflow.json` plus the
 reasoning behind the design, not a specific client's production system.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    A[Gmail Trigger] --> B[Extract Email Fields]
+    B --> C[AI Agent\nTriage & Draft]
+    LLM[OpenAI Chat Model] -.model.-> C
+    MEM[(Memory\nper sender)] -.context.-> C
+    RAG[[Company KB Search\nRAG tool]] -.tool.-> C
+    CRM_T[[CRM Lookup\ntool]] -.tool.-> C
+    OP[Structured Output\nParser] -.schema.-> C
+    C --> D{Route by\npriority/category}
+    D -- urgent --> E[Create CRM Ticket]
+    D -- urgent --> F[Notify Ops\nLINE]
+    D -- urgent --> G[Log to Ops Sheet]
+    D -- standard --> H[Create Gmail\nDraft Reply]
+    D -- standard --> G
+    D -- spam --> G
+```
+
 ## What it does
 
 ```
@@ -46,6 +66,18 @@ Gmail (new email)
   generic CRM ticket API + LINE's push-message API) — showing the same
   agent pattern extends to whatever channel/CRM a real client already uses.
 
+## Tech stack
+
+| Layer | Tool / Pattern |
+|---|---|
+| Orchestration | n8n (self-hosted), `@n8n/n8n-nodes-langchain` |
+| LLM | OpenAI `gpt-4o-mini` (swappable) |
+| Memory | LangChain buffer-window memory, keyed per sender |
+| Retrieval (RAG) | Qdrant vector store + OpenAI embeddings (`text-embedding-3-small`) |
+| Structured output | LangChain JSON-schema output parser |
+| Integrations | Gmail API, Google Sheets API, generic REST (CRM), LINE Messaging API |
+| Safety pattern | Prompt-level escalation carve-out (no auto-send on urgent/ambiguous cases) |
+
 ## Files
 
 - `workflow.json` — importable n8n workflow (Settings → Import from File).
@@ -54,6 +86,10 @@ Gmail (new email)
 - `PROCESS.md` — the design notes: prompt structure, why this memory/RAG
   setup, what was tested, and how a non-technical team could take over
   monitoring it day to day.
+- `TEST_CASES.md` — the representative test emails used to validate the
+  classification/escalation logic before wiring the workflow live.
+- `kb/` — sample knowledge-base documents used to demonstrate the RAG tool
+  (`search_company_kb`). Swap these for a real company's docs in production.
 
 ## Requirements to run
 
@@ -64,3 +100,7 @@ Gmail (new email)
 - Google Sheets OAuth2 credential
 - A vector store (Qdrant used here; swappable for Pinecone/Supabase/etc.)
 - Generic HTTP header auth credentials for your CRM and LINE channel token
+
+## License
+
+MIT — see `LICENSE`.

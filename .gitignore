@@ -1,0 +1,10 @@
+# n8n export artifacts / secrets
+credentials.json
+.n8n/
+*.env
+.env.local
+
+# OS/editor cruft
+.DS_Store
+.vscode/
+*.log
