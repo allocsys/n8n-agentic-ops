@@ -169,6 +169,9 @@
   .node-label{fill:var(--text); font-family:var(--mono); font-size:12px;}
   .node-sub{fill:var(--text-faint); font-family:var(--mono); font-size:9.5px;}
   .path-line{fill:none; stroke:var(--line); stroke-width:1.4;}
+  .path-optional{stroke-dasharray:4 4;}
+  .node-optional{stroke-dasharray:5 4;}
+  .node-sub-optional{fill:var(--text-faint); font-style:italic;}
   .legend{display:flex; gap:22px; flex-wrap:wrap; margin-top:18px; font-family:var(--mono); font-size:11.5px; color:var(--text-dim);}
   .legend span{display:inline-flex; align-items:center; gap:7px;}
   .legend i{width:9px; height:9px; border-radius:50%; display:inline-block;}
@@ -301,73 +304,93 @@
           <a class="btn btn-ghost" href="#try">Run the zero-credential mock →</a>
         </div>
       </div>
-      <div class="terminal reveal in">
-        <div class="term-lines" id="termLines"></div>
-      </div>
     </div>
   </section>
 
   <section id="flow">
     <div class="section-head reveal">
       <div class="eyebrow">Architecture</div>
-      <h2>One normalized shape, three inboxes in.</h2>
-      <p>Every channel maps to the same fields — from, subject, body, replyTarget — before it ever reaches the agent. Downstream logic doesn't know or care which app the message arrived on.</p>
+      <h2>One normalized shape. Every extra piece optional.</h2>
+      <p>Every channel maps to the same fields — from, subject, body, replyTarget — before it ever reaches the agent. Only Gmail + one LLM provider are required to run this; every other integration below is env-gated and skips cleanly when unset.</p>
     </div>
 
     <div class="panel reveal">
       <div class="panel-inner">
-        <span class="panel-label">live routing · loops every few seconds</span>
-        <svg class="flow" viewBox="0 0 1000 460" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-          <path id="p1" class="path-line" d="M150,90 C260,90 260,225 340,225"/>
-          <path id="p2" class="path-line" d="M150,225 C260,225 260,225 340,225"/>
-          <path id="p3" class="path-line" d="M150,360 C260,360 260,225 340,225"/>
-          <path id="p4" class="path-line" d="M420,225 L580,225"/>
-          <path id="p5" class="path-line" d="M660,225 C740,225 740,90 820,90"/>
-          <path id="p6" class="path-line" d="M660,225 C740,225 740,225 820,225"/>
-          <path id="p7" class="path-line" d="M660,225 C740,225 740,360 820,360"/>
+        <span class="panel-label">full pipeline · solid = required, dashed = optional / env-gated</span>
+        <svg class="flow" viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <path id="p1" class="path-line" d="M150,65 C260,65 260,185 340,185"/>
+          <path id="p2" class="path-line path-optional" d="M150,185 C260,185 260,185 340,185"/>
+          <path id="p3" class="path-line path-optional" d="M150,305 C260,305 260,185 340,185"/>
+          <path id="p4" class="path-line" d="M420,185 L560,185"/>
+          <path id="p5" class="path-line" d="M710,185 C770,185 770,65 830,65"/>
+          <path id="p6" class="path-line" d="M710,185 C770,185 770,185 830,185"/>
+          <path id="p7" class="path-line" d="M710,185 C770,185 770,305 830,305"/>
+          <path class="path-line path-optional" d="M110,115 L115,400"/>
+          <path class="path-line path-optional" d="M905,115 L905,400"/>
 
           <g>
-            <rect class="node-box" x="30" y="65" width="120" height="50" rx="8"/>
-            <text class="node-label" x="90" y="86" text-anchor="middle">Gmail</text>
-            <text class="node-sub" x="90" y="102" text-anchor="middle">trigger + attach.</text>
+            <rect class="node-box" x="30" y="40" width="120" height="50" rx="8"/>
+            <text class="node-label" x="90" y="61" text-anchor="middle">Gmail</text>
+            <text class="node-sub" x="90" y="77" text-anchor="middle">trigger + attach. · required</text>
           </g>
           <g>
-            <rect class="node-box" x="30" y="200" width="120" height="50" rx="8"/>
-            <text class="node-label" x="90" y="221" text-anchor="middle">Telegram</text>
-            <text class="node-sub" x="90" y="237" text-anchor="middle">bot trigger</text>
+            <rect class="node-box node-optional" x="30" y="160" width="120" height="50" rx="8"/>
+            <text class="node-label" x="90" y="181" text-anchor="middle">Telegram</text>
+            <text class="node-sub" x="90" y="197" text-anchor="middle">bot trigger · optional</text>
           </g>
           <g>
-            <rect class="node-box" x="30" y="335" width="120" height="50" rx="8"/>
-            <text class="node-label" x="90" y="356" text-anchor="middle">WhatsApp</text>
-            <text class="node-sub" x="90" y="372" text-anchor="middle">cloud API</text>
-          </g>
-
-          <g>
-            <rect class="node-box" x="340" y="200" width="80" height="50" rx="25" stroke="var(--violet)"/>
-            <text class="node-label" x="380" y="230" text-anchor="middle" style="fill:var(--violet)">merge</text>
+            <rect class="node-box node-optional" x="30" y="280" width="120" height="50" rx="8"/>
+            <text class="node-label" x="90" y="301" text-anchor="middle">WhatsApp</text>
+            <text class="node-sub" x="90" y="317" text-anchor="middle">cloud API · optional</text>
           </g>
 
           <g>
-            <rect class="node-box" x="580" y="185" width="80" height="80" rx="10" stroke="var(--violet)"/>
-            <text class="node-label" x="620" y="215" text-anchor="middle" style="fill:var(--violet)">AI</text>
-            <text class="node-label" x="620" y="232" text-anchor="middle" style="fill:var(--violet)">Agent</text>
-            <text class="node-sub" x="620" y="252" text-anchor="middle">memory · RAG · CRM</text>
+            <rect class="node-box" x="340" y="160" width="80" height="50" rx="25" stroke="var(--violet)"/>
+            <text class="node-label" x="380" y="190" text-anchor="middle" style="fill:var(--violet)">merge</text>
           </g>
 
           <g>
-            <rect class="node-box" x="820" y="65" width="150" height="50" rx="8" stroke="var(--amber)"/>
-            <text class="node-label" x="895" y="86" text-anchor="middle" style="fill:var(--amber)">Urgent</text>
-            <text class="node-sub" x="895" y="102" text-anchor="middle">ticket + ops alert</text>
+            <rect class="node-box" x="560" y="110" width="150" height="150" rx="10" stroke="var(--violet)"/>
+            <text class="node-label" x="635" y="138" text-anchor="middle" style="fill:var(--violet)">AI Agent</text>
+            <text class="node-sub" x="635" y="160" text-anchor="middle">LLM: OpenAI (default)</text>
+            <text class="node-sub node-sub-optional" x="635" y="175" text-anchor="middle">+ Gemini/Claude opt-in (off)</text>
+            <text class="node-sub" x="635" y="196" text-anchor="middle">Memory: per sender</text>
+            <text class="node-sub" x="635" y="212" text-anchor="middle">Tools: RAG · CRM lookup</text>
+            <text class="node-sub" x="635" y="236" text-anchor="middle">→ structured JSON output</text>
+          </g>
+
+          <g>
+            <rect class="node-box" x="830" y="40" width="150" height="50" rx="8" stroke="var(--amber)"/>
+            <text class="node-label" x="905" y="61" text-anchor="middle" style="fill:var(--amber)">Urgent</text>
+            <text class="node-sub" x="905" y="77" text-anchor="middle">CRM ticket + sheet log</text>
           </g>
           <g>
-            <rect class="node-box" x="820" y="200" width="150" height="50" rx="8" stroke="var(--cyan)"/>
-            <text class="node-label" x="895" y="221" text-anchor="middle" style="fill:var(--cyan)">Standard</text>
-            <text class="node-sub" x="895" y="237" text-anchor="middle">reply drafted</text>
+            <rect class="node-box" x="830" y="160" width="150" height="50" rx="8" stroke="var(--cyan)"/>
+            <text class="node-label" x="905" y="181" text-anchor="middle" style="fill:var(--cyan)">Standard</text>
+            <text class="node-sub" x="905" y="197" text-anchor="middle">reply drafted, same channel</text>
           </g>
           <g>
-            <rect class="node-box" x="820" y="335" width="150" height="50" rx="8" stroke="var(--text-faint)"/>
-            <text class="node-label" x="895" y="356" text-anchor="middle" style="fill:var(--text-dim)">Spam</text>
-            <text class="node-sub" x="895" y="372" text-anchor="middle">logged only</text>
+            <rect class="node-box" x="830" y="280" width="150" height="50" rx="8" stroke="var(--text-faint)"/>
+            <text class="node-label" x="905" y="301" text-anchor="middle" style="fill:var(--text-dim)">Spam</text>
+            <text class="node-sub" x="905" y="317" text-anchor="middle">logged only</text>
+          </g>
+
+          <g>
+            <rect class="node-box node-optional" x="30" y="400" width="170" height="100" rx="8"/>
+            <text class="node-label" x="115" y="424" text-anchor="middle">Attachments</text>
+            <text class="node-sub" x="115" y="440" text-anchor="middle">Gmail only, 0–N per message</text>
+            <text class="node-sub" x="115" y="456" text-anchor="middle">→ Drive upload (optional)</text>
+            <text class="node-sub" x="115" y="472" text-anchor="middle">→ own sheet tab, by messageId</text>
+            <text class="node-sub" x="115" y="488" text-anchor="middle">never blocks the main row</text>
+          </g>
+
+          <g>
+            <rect class="node-box node-optional" x="820" y="400" width="170" height="100" rx="8"/>
+            <text class="node-label" x="905" y="424" text-anchor="middle">Ops alerts</text>
+            <text class="node-sub" x="905" y="440" text-anchor="middle">LINE · Telegram · WhatsApp</text>
+            <text class="node-sub" x="905" y="456" text-anchor="middle">each gated on its own env var</text>
+            <text class="node-sub" x="905" y="472" text-anchor="middle">unset → node never reached</text>
+            <text class="node-sub" x="905" y="488" text-anchor="middle">fires only on Urgent</text>
           </g>
 
           <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0s"><mpath href="#p1" xlink:href="#p1"/></animateMotion></circle>
@@ -380,9 +403,11 @@
         </svg>
         <div class="legend">
           <span><i style="background:var(--violet)"></i> normalize / agent</span>
-          <span><i style="background:var(--amber)"></i> urgent → CRM + LINE/Telegram/WhatsApp alert</span>
+          <span><i style="background:var(--amber)"></i> urgent → CRM ticket, ops alert optional</span>
           <span><i style="background:var(--cyan)"></i> standard → drafted reply, same channel</span>
           <span><i style="background:var(--text-faint)"></i> spam → sheet log only</span>
+          <span><i style="border:1px solid var(--text-dim); background:transparent;"></i> solid border = required</span>
+          <span><i style="border:1px dashed var(--text-faint); background:transparent;"></i> dashed border = optional, env-gated</span>
         </div>
       </div>
     </div>
