@@ -12,7 +12,12 @@ reasoning behind the design, not a specific client's production system.
 ```mermaid
 flowchart LR
     A[Gmail Trigger] --> B[Extract Email Fields]
-    A --> I[Upload Attachment\nto Drive]
+    A --> I[List Attachments\none item per file]
+    I --> J((Loop Over\nAttachments))
+    J -- loop --> K[Upload to Drive]
+    K --> L[Log Attachment\nto Sheet]
+    L --> J
+    J -- done --> M[Attachments Done]
     B --> C[AI Agent\nTriage & Draft]
     LLM[OpenAI Chat Model] -.model.-> C
     MEM[(Memory\nper sender)] -.context.-> C
@@ -26,7 +31,6 @@ flowchart LR
     D -- standard --> H[Create Gmail\nDraft Reply]
     D -- standard --> G
     D -- spam --> G
-    I -.attachment link.-> G
 ```
 
 ## What it does
@@ -34,8 +38,11 @@ flowchart LR
 ```
 Gmail (new email)
    → extract sender/subject/body
-   → (in parallel) any attachment is uploaded to a Drive folder;
-     the resulting webViewLink is carried through to the Sheet log
+   → (in parallel) List Attachments fans out one n8n item per attachment,
+     then Loop Over Attachments processes them one at a time:
+     upload to Drive → append a row to the "Attachments" sheet tab → next
+     attachment, until none remain (handles zero, one, or many attachments
+     on the same email)
    → AI Agent (LLM + memory + RAG tool + CRM tool)
        - classifies category (billing / technical / sales / complaint / spam)
        - classifies priority (urgent / standard)
@@ -47,6 +54,15 @@ Gmail (new email)
        standard → Gmail draft reply created + logged to Sheet
        spam     → logged to Sheet only
 ```
+
+**Why attachment links live in a separate sheet tab, not a column on the main
+log row:** the main row (Log to Ops Sheet) is written from a single AI Agent
+call, while the attachment branch runs a variable number of loop iterations
+(zero to many). Waiting for both branches to finish before writing one row
+would mean the ops log is only as fast as the slowest attachment upload, and
+any failed upload would block the whole row. Instead, each attachment gets
+its own row in an `Attachments` tab (`messageId`, `subject`, `fileName`,
+`driveLink`), correlated back to the main log by `messageId`.
 
 ## Why it's built this way
 
@@ -80,6 +96,7 @@ Gmail (new email)
 | Retrieval (RAG) | Qdrant vector store + OpenAI embeddings (`text-embedding-3-small`) |
 | Structured output | LangChain JSON-schema output parser |
 | Integrations | Gmail API, Google Drive API, Google Sheets API, generic REST (CRM), LINE Messaging API |
+| Attachment handling | Code node fans out N attachments → SplitInBatches loop (1 at a time) → Drive upload → Sheets append |
 | Safety pattern | Prompt-level escalation carve-out (no auto-send on urgent/ambiguous cases) |
 
 ## Files
@@ -103,7 +120,8 @@ Gmail (new email)
 - Gmail OAuth2 credential with send + draft scopes
 - Google Drive OAuth2 credential (used to upload email attachments; set
   `folderId` in the "Upload Attachment to Drive" node to a real Drive folder)
-- Google Sheets OAuth2 credential
+- Google Sheets OAuth2 credential (the target spreadsheet needs both a
+  `Log` tab and an `Attachments` tab — see above)
 - A vector store (Qdrant used here; swappable for Pinecone/Supabase/etc.)
 - Generic HTTP header auth credentials for your CRM and LINE channel token
 
