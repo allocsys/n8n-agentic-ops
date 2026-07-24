@@ -125,6 +125,15 @@
   .stat.here{background:var(--cyan); box-shadow:0 0 0 3px rgba(62,207,207,0.15);}
   .terminal .caret{display:inline-block; width:7px; height:14px; background:var(--cyan); animation:blink 1s step-end infinite; vertical-align:-2px;}
   @keyframes blink{50%{opacity:0;}}
+  .term-lines{min-height:132px;}
+  .term-line{padding:5px 0; display:flex; align-items:center; gap:2px; white-space:pre;}
+  .term-line .caret{margin-left:1px;}
+  .term-line.prompt{color:var(--text);}
+  .term-line.dim{color:var(--text-faint);}
+  .term-line.ok{color:var(--green);}
+  .term-line.amber{color:var(--amber);}
+  .term-line.cyan{color:var(--cyan);}
+  .term-line.faint{color:var(--text-faint);}
 
   .hero-ctas{display:flex; gap:12px; margin-top:32px; flex-wrap:wrap;}
   .btn{
@@ -293,10 +302,7 @@
         </div>
       </div>
       <div class="terminal reveal in">
-        <div class="row"><span class="stat live"></span> n8n cloud <b>&nbsp;LIVE</b> — allocsys.app.n8n.cloud</div>
-        <div class="row"><span class="stat mock"></span> CRM worker <b>&nbsp;MOCK</b> — awaiting Cloudflare secrets</div>
-        <div class="row"><span class="stat here"></span> GitHub Pages <b>&nbsp;this page</b></div>
-        <div class="row" style="margin-top:6px; color:var(--text-faint);">$ npx n8n <span class="caret"></span></div>
+        <div class="term-lines" id="termLines"></div>
       </div>
     </div>
   </section>
@@ -515,6 +521,57 @@
       });
     });
   });
+
+  // Mock terminal run — illustrative only, not a live status feed
+  (function(){
+    const el = document.getElementById('termLines');
+    if(!el) return;
+    const lines = [
+      { text: '$ npx n8n', cls: 'prompt' },
+      { text: '→ importing mock/workflow.mock.json …', cls: 'dim' },
+      { text: '✓ gmail + telegram + whatsapp → normalized', cls: 'dim' },
+      { text: '✓ routed → urgent: CRM ticket + ops alert', cls: 'amber' },
+      { text: '✓ routed → standard: reply drafted', cls: 'cyan' },
+      { text: '✓ routed → spam: logged only', cls: 'faint' },
+      { text: '$ mock mode — no live credentials needed', cls: 'dim' }
+    ];
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduced){
+      lines.forEach(line=>{
+        const div = document.createElement('div');
+        div.className = 'term-line ' + line.cls;
+        div.textContent = line.text;
+        el.appendChild(div);
+      });
+      return;
+    }
+    let li = 0, ci = 0, div = null;
+    function step(){
+      if(li >= lines.length){
+        setTimeout(()=>{ el.innerHTML = ''; li = 0; ci = 0; div = null; step(); }, 2000);
+        return;
+      }
+      const line = lines[li];
+      if(ci === 0){
+        div = document.createElement('div');
+        div.className = 'term-line ' + line.cls;
+        div.innerHTML = '<span class="txt"></span><span class="caret"></span>';
+        el.appendChild(div);
+      }
+      const txt = div.querySelector('.txt');
+      if(ci <= line.text.length){
+        txt.textContent = line.text.slice(0, ci);
+        ci++;
+        setTimeout(step, 16 + Math.random()*24);
+      } else {
+        const caret = div.querySelector('.caret');
+        if(caret) caret.remove();
+        li++; ci = 0;
+        setTimeout(step, 280);
+      }
+    }
+    step();
+  })();
 </script>
 
 </body>
