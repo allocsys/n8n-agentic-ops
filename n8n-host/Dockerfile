@@ -15,7 +15,12 @@
 # into, so it has no equivalent auto-injected value to read. That one
 # stays a manual paste, documented in this directory's README.md.
 
-FROM n8nio/n8n:latest
+# Pinned rather than :latest -- n8n v2.0 (released 2026) replaced the
+# Activate/Deactivate toggle with Publish/Unpublish and changed several
+# security defaults (OAuth callback auth, env-var access in Code nodes).
+# This repo's SETUP.md and workflow.json assume v2.0+ behavior. Bump
+# deliberately and re-test rather than floating on :latest.
+FROM n8nio/n8n:2.28.5
 
 USER root
 COPY render-entrypoint.sh /render-entrypoint.sh
