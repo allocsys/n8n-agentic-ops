@@ -55,9 +55,29 @@ curl -X POST https://n8n-crm-worker.<your-subdomain>.workers.dev/v1/tickets \
 curl "https://n8n-crm-worker.<your-subdomain>.workers.dev/v1/tickets?email=angry.customer@example.com"
 ```
 
-Once deployed, update `workflow.json`'s "CRM Lookup (tool)" and "Create CRM
-Ticket (urgent)" node URLs from `https://api.example-crm.com/...` to your
-real `*.workers.dev` URL (or a custom domain).
+`workflow.json`'s CRM nodes read the URL from a single n8n environment
+variable (`CRM_WORKER_BASE_URL`) instead of a hardcoded address, so you only
+set it in one place (n8n → Settings → Variables, or your `.env` if
+self-hosted) rather than editing multiple nodes.
+
+## Automatic deploy + URL capture (GitHub Actions)
+
+`.github/workflows/deploy-crm-worker.yml` deploys this Worker automatically
+on every push to `crm-worker/**` (or on manual trigger) and writes the real
+living URL to `crm-worker/DEPLOYED_URL.txt` in the same commit run — so you
+never have to hunt for it in the Cloudflare dashboard.
+
+One-time setup required (can't be automated further without your
+credentials):
+1. In the repo's Settings → Secrets and variables → Actions, add:
+   - `CLOUDFLARE_API_TOKEN` — a Workers-edit-scoped API token
+   - `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID
+2. Push to `main` (or run the workflow manually from the Actions tab).
+3. Check `crm-worker/DEPLOYED_URL.txt` for the live URL, then paste it into
+   `CRM_WORKER_BASE_URL` in n8n.
+
+Everything after step 1 re-runs automatically on future pushes — the URL
+file stays in sync with whatever's actually deployed.
 
 ## Local development
 
