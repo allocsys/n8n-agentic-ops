@@ -35,30 +35,84 @@
       }
     },
     {
+      "id": "list-attachments",
+      "name": "List Attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ -960, 200 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Gmail Trigger puts each attachment on its own binary key: attachment_0, attachment_1, ...\n// Fan out one n8n item per attachment so the loop below can upload them individually.\nconst results = [];\nfor (const item of $input.all()) {\n  const binaryKeys = Object.keys(item.binary || {}).filter((k) => k.startsWith('attachment_'));\n  for (const key of binaryKeys) {\n    results.push({\n      json: {\n        messageId: item.json.id,\n        subject: item.json.subject,\n        fileName: (item.binary[key] && item.binary[key].fileName) || key\n      },\n      binary: { data: item.binary[key] }\n    });\n  }\n}\nreturn results;"
+      }
+    },
+    {
+      "id": "loop-attachments",
+      "name": "Loop Over Attachments",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [ -800, 200 ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "attachments-done",
+      "name": "Attachments Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ -640, 60 ],
+      "parameters": {},
+      "notes": "End of the attachment-upload branch for this email. Nothing downstream needs this signal today; it's here so the branch has a visible terminus instead of a dangling 'done' output."
+    },
+    {
       "id": "drive-upload-attachment",
       "name": "Upload Attachment to Drive",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [ -960, 180 ],
+      "position": [ -640, 260 ],
       "parameters": {
         "resource": "file",
         "operation": "upload",
-        "name": "={{ $json.subject + ' - ' + $json.id }}",
+        "name": "={{ $json.fileName }}",
         "driveId": { "mode": "list", "value": "My Drive" },
         "folderId": { "mode": "id", "value": "REPLACE_WITH_DRIVE_FOLDER_ID" },
-        "binaryPropertyName": "attachment_0",
+        "binaryPropertyName": "data",
         "options": {}
       },
       "onError": "continueRegularOutput",
-      "notes": "Runs per inbound email; no-ops (via onError) when there is no attachment_0 binary present. Uploads the first attachment only — extend with a Loop node if an email can have several.",
       "credentials": { "googleDriveOAuth2Api": { "id": "REPLACE_ME", "name": "Google Drive" } }
+    },
+    {
+      "id": "log-attachment-sheet",
+      "name": "Log Attachment to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [ -480, 260 ],
+      "parameters": {
+        "operation": "append",
+        "documentId": { "value": "REPLACE_WITH_SHEET_ID", "mode": "id" },
+        "sheetName": { "value": "Attachments", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "messageId": "={{ $('List Attachments').item.json.messageId }}",
+            "subject": "={{ $('List Attachments').item.json.subject }}",
+            "fileName": "={{ $('List Attachments').item.json.fileName }}",
+            "driveLink": "={{ $json.webViewLink ?? '' }}"
+          }
+        }
+      },
+      "notes": "One row per attachment, in a separate 'Attachments' tab from the main ops Log — correlate back to the email via messageId. Feeds back into Loop Over Attachments to process the next attachment.",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_ME", "name": "Google Sheets" } }
     },
     {
       "id": "lm-chat",
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
-      "position": [ -900, 260 ],
+      "position": [ -900, 480 ],
       "parameters": { "model": "gpt-4o-mini", "options": { "temperature": 0.2 } },
       "credentials": { "openAiApi": { "id": "REPLACE_ME", "name": "OpenAI" } }
     },
@@ -67,7 +121,7 @@
       "name": "Conversation Memory (per sender)",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [ -760, 260 ],
+      "position": [ -760, 480 ],
       "parameters": {
         "sessionIdType": "customKey",
         "sessionKey": "={{ $('Extract Email Fields').item.json.from }}",
@@ -79,7 +133,7 @@
       "name": "Company KB Search (RAG tool)",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.1,
-      "position": [ -620, 260 ],
+      "position": [ -620, 480 ],
       "parameters": {
         "mode": "retrieve-as-tool",
         "qdrantCollection": { "value": "company-kb", "mode": "list" },
@@ -94,7 +148,7 @@
       "name": "Embeddings (OpenAI)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
-      "position": [ -620, 420 ],
+      "position": [ -620, 640 ],
       "parameters": { "model": "text-embedding-3-small" },
       "credentials": { "openAiApi": { "id": "REPLACE_ME", "name": "OpenAI" } }
     },
@@ -103,7 +157,7 @@
       "name": "CRM Lookup (tool)",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [ -480, 260 ],
+      "position": [ -480, 480 ],
       "parameters": {
         "toolDescription": "Look up an existing CRM contact/deal by email address before drafting a reply, so the agent knows account history and open tickets.",
         "method": "GET",
@@ -122,7 +176,7 @@
       "name": "Structured Output Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
-      "position": [ -340, 420 ],
+      "position": [ -340, 640 ],
       "parameters": {
         "jsonSchemaExample": "{\n  \"category\": \"billing | technical | sales | complaint | spam\",\n  \"priority\": \"urgent | standard\",\n  \"summary\": \"one-sentence summary for the ops log\",\n  \"suggested_reply\": \"a drafted reply in the customer's language, grounded in KB/CRM lookups, or empty string if priority is urgent and a human should write it\",\n  \"needs_human\": true\n}"
       }
@@ -178,11 +232,11 @@
             "category": "={{ $json.output.category }}",
             "priority": "={{ $json.output.priority }}",
             "summary": "={{ $json.output.summary }}",
-            "needs_human": "={{ $json.output.needs_human }}",
-            "attachment_link": "={{ $('Upload Attachment to Drive').item?.json?.webViewLink ?? '' }}"
+            "needs_human": "={{ $json.output.needs_human }}"
           }
         }
       },
+      "notes": "Attachment links are NOT joined in here — they land in the separate 'Attachments' sheet tab (see Log Attachment to Sheet), correlated by messageId. Merging them into this row would require synchronizing two branches that run at different speeds (one HTTP call vs. N looped uploads); logging them separately is simpler and doesn't block/slow this row on attachment upload success.",
       "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_ME", "name": "Google Sheets" } }
     },
     {
@@ -245,8 +299,17 @@
     }
   ],
   "connections": {
-    "Gmail Trigger": { "main": [ [ { "node": "Extract Email Fields", "type": "main", "index": 0 }, { "node": "Upload Attachment to Drive", "type": "main", "index": 0 } ] ] },
+    "Gmail Trigger": { "main": [ [ { "node": "Extract Email Fields", "type": "main", "index": 0 }, { "node": "List Attachments", "type": "main", "index": 0 } ] ] },
     "Extract Email Fields": { "main": [ [ { "node": "AI Agent - Triage & Draft", "type": "main", "index": 0 } ] ] },
+    "List Attachments": { "main": [ [ { "node": "Loop Over Attachments", "type": "main", "index": 0 } ] ] },
+    "Loop Over Attachments": {
+      "main": [
+        [ { "node": "Attachments Done", "type": "main", "index": 0 } ],
+        [ { "node": "Upload Attachment to Drive", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Upload Attachment to Drive": { "main": [ [ { "node": "Log Attachment to Sheet", "type": "main", "index": 0 } ] ] },
+    "Log Attachment to Sheet": { "main": [ [ { "node": "Loop Over Attachments", "type": "main", "index": 0 } ] ] },
     "OpenAI Chat Model": { "ai_languageModel": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_languageModel", "index": 0 } ] ] },
     "Conversation Memory (per sender)": { "ai_memory": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_memory", "index": 0 } ] ] },
     "Embeddings (OpenAI)": { "ai_embedding": [ [ { "node": "Company KB Search (RAG tool)", "type": "ai_embedding", "index": 0 } ] ] },
