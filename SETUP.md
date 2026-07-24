@@ -11,6 +11,12 @@ one-click deploy buttons in the main [README](README.md):
 If you haven't done those yet, do them first — everything below assumes
 you have both URLs in hand.
 
+> **n8n version note:** the hosted instance is pinned to n8n 2.28.5
+> (v2.0+). Two behavior changes from v2.0 affect this guide: the old
+> Activate/Deactivate toggle is now **Publish/Unpublish**, and OAuth
+> callback URLs require authentication by default. Both are called out
+> at the relevant steps below.
+
 ## Required setup (Gmail triage, single LLM provider)
 
 This is the minimum path: email in, AI triage, replies drafted, logged to
@@ -47,7 +53,12 @@ a sheet. No Telegram, WhatsApp, Drive, or multi-provider fallback.
    crm-worker/README.md). The **Company KB Search (RAG tool)** node needs
    a Qdrant credential — see the RAG section of the main README if you
    don't already have a Qdrant instance.
-8. **Activate the workflow.** Toggle it on (top-right in the n8n editor).
+8. **Publish the workflow.** Click **Publish** (top-right in the n8n
+   editor) — this replaced the old Activate/Deactivate toggle in n8n
+   v2.0. If any OAuth "Create New" step above prompted for
+   re-authentication mid-flow, that's the new default requiring auth on
+   OAuth callback URLs (`N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=false`) — just
+   sign in when asked.
 
 That's it — Gmail messages now get triaged, drafted, and logged, using a
 single LLM provider, with no Telegram/WhatsApp/Drive accounts required.
@@ -92,8 +103,9 @@ no account needed for the ones you skip.
 ### Telegram / WhatsApp as inbound channels
 Unlike everything else above, these two can't be turned on by just setting
 an env var — n8n checks a trigger node's credential when the workflow is
-activated, before any if-logic runs, so an unconfigured trigger would
-block activation entirely. That's why both ship hard-disabled. To enable:
+published (formerly "activated"), before any if-logic runs, so an
+unconfigured trigger would block publishing entirely. That's why both
+ship hard-disabled. To enable:
 
 - **Telegram**: create a bot via [@BotFather](https://t.me/BotFather) on
   Telegram (`/newbot`, get the token), add it as a Telegram Bot API
