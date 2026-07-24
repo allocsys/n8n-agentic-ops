@@ -19,9 +19,13 @@ a sheet. No Telegram, WhatsApp, Drive, or multi-provider fallback.
 1. **Open your n8n instance** at the Render URL from step 2 above and log
    in (the Render Blueprint auto-generates the basic-auth password — check
    your Render service's environment variables if you don't have it).
-2. **Set the CRM Worker URL.** In n8n, go to Settings → Environment
-   Variables (or your Render service's env vars) and add:
-   `CRM_WORKER_BASE_URL` = your `*.workers.dev` URL from step 1.
+2. **Set the CRM Worker URL.** This has to be a real container
+   environment variable, not n8n's in-app Settings → Variables (the
+   workflow reads it via `$env`, which only sees the container's actual
+   env vars). In the Render dashboard → your n8n service → Environment,
+   find `CRM_WORKER_BASE_URL` (already listed there as a placeholder from
+   `render.yaml`) and replace it with your `*.workers.dev` URL from step
+   1, then save (Render redeploys automatically).
 3. **Import the workflow.** In n8n: Workflows → Import from File →
    select `workflow.json` from this repo.
 4. **Connect Gmail.** Click the **Gmail Trigger** node → Credential →
