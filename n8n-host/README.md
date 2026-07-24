@@ -7,8 +7,8 @@ native "Connect" OAuth buttons for Gmail/Drive/Sheets.
 
 This is the Phase 1 host piece of the plug-and-play plan (see the project's
 Notion plan). It gets you a running n8n. It does **not** import the
-workflow or connect any credentials for you -- that's Phase 2 (`SETUP.md`,
-not yet written).
+workflow or connect any credentials for you -- for that, follow
+[`SETUP.md`](../SETUP.md) once you're deployed.
 
 ## Deploy
 
