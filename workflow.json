@@ -1,5 +1,5 @@
 {
-  "name": "Agentic Email Triage & CRM Ops (Gmail → AI Agent → Sheets/CRM/LINE)",
+  "name": "Agentic Email Triage & CRM Ops (Gmail → AI Agent → Sheets/CRM/LINE/Drive)",
   "nodes": [
     {
       "id": "trigger-gmail",
@@ -10,7 +10,8 @@
       "parameters": {
         "pollTimes": { "item": [ { "mode": "everyMinute" } ] },
         "filters": { "labelIds": [ "INBOX" ] },
-        "simple": false
+        "simple": false,
+        "options": { "downloadAttachments": true }
       },
       "credentials": { "gmailOAuth2": { "id": "REPLACE_ME", "name": "Gmail (support inbox)" } }
     },
@@ -32,6 +33,25 @@
           ]
         }
       }
+    },
+    {
+      "id": "drive-upload-attachment",
+      "name": "Upload Attachment to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [ -960, 180 ],
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $json.subject + ' - ' + $json.id }}",
+        "driveId": { "mode": "list", "value": "My Drive" },
+        "folderId": { "mode": "id", "value": "REPLACE_WITH_DRIVE_FOLDER_ID" },
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Runs per inbound email; no-ops (via onError) when there is no attachment_0 binary present. Uploads the first attachment only — extend with a Loop node if an email can have several.",
+      "credentials": { "googleDriveOAuth2Api": { "id": "REPLACE_ME", "name": "Google Drive" } }
     },
     {
       "id": "lm-chat",
@@ -158,7 +178,8 @@
             "category": "={{ $json.output.category }}",
             "priority": "={{ $json.output.priority }}",
             "summary": "={{ $json.output.summary }}",
-            "needs_human": "={{ $json.output.needs_human }}"
+            "needs_human": "={{ $json.output.needs_human }}",
+            "attachment_link": "={{ $('Upload Attachment to Drive').isExecuted ? $('Upload Attachment to Drive').item.json.webViewLink : '' }}"
           }
         }
       },
@@ -224,7 +245,7 @@
     }
   ],
   "connections": {
-    "Gmail Trigger": { "main": [ [ { "node": "Extract Email Fields", "type": "main", "index": 0 } ] ] },
+    "Gmail Trigger": { "main": [ [ { "node": "Extract Email Fields", "type": "main", "index": 0 }, { "node": "Upload Attachment to Drive", "type": "main", "index": 0 } ] ] },
     "Extract Email Fields": { "main": [ [ { "node": "AI Agent - Triage & Draft", "type": "main", "index": 0 } ] ] },
     "OpenAI Chat Model": { "ai_languageModel": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_languageModel", "index": 0 } ] ] },
     "Conversation Memory (per sender)": { "ai_memory": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_memory", "index": 0 } ] ] },
