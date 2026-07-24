@@ -193,6 +193,45 @@
     font-family:var(--mono); font-size:10.5px; color:var(--text-faint);
     position:absolute; top:14px; right:20px;
   }
+
+  .mobile-flow{display:none;}
+  .flow-stack{display:flex; flex-direction:column; padding:6px 2px 2px;}
+  .flow-group{display:flex; flex-direction:column; gap:10px;}
+  .flow-group.outcomes{gap:10px;}
+  .flow-node{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:10px;
+    padding:13px 15px; display:flex; flex-direction:column; gap:3px;
+  }
+  .flow-node.optional{border-style:dashed;}
+  .flow-node.note{border-style:dashed;}
+  .flow-node-title{font-family:var(--mono); font-size:12.5px; font-weight:600; color:var(--text);}
+  .flow-node-sub{font-family:var(--mono); font-size:10.5px; color:var(--text-faint); line-height:1.5;}
+  .flow-node.merge{align-self:center; border-color:var(--violet); text-align:center; padding:9px 20px;}
+  .flow-node.merge .flow-node-title{color:var(--violet);}
+  .flow-node.agent{border-color:var(--violet);}
+  .flow-node.agent .flow-node-title{color:var(--violet);}
+  .flow-node.outcome-urgent{border-color:var(--amber);}
+  .flow-node.outcome-urgent .flow-node-title{color:var(--amber);}
+  .flow-node.outcome-standard{border-color:var(--cyan);}
+  .flow-node.outcome-standard .flow-node-title{color:var(--cyan);}
+  .flow-node.outcome-spam .flow-node-title{color:var(--text-dim);}
+  .flow-connector{position:relative; height:26px; display:flex; align-items:center; justify-content:center;}
+  .flow-connector::before{
+    content:""; position:absolute; top:0; bottom:0; left:50%;
+    width:1.4px; background:var(--line); transform:translateX(-50%);
+  }
+  .flow-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--cyan);
+    box-shadow:0 0 0 3px rgba(62,207,207,0.15);
+    animation:flowDown 2.2s ease-in-out infinite;
+  }
+  @keyframes flowDown{
+    0%{transform:translateY(-11px); opacity:0;}
+    18%{opacity:1;}
+    82%{opacity:1;}
+    100%{transform:translateY(11px); opacity:0;}
+  }
+  .flow-side-notes{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
   .copy{
     font-family:var(--mono); font-size:11px; color:var(--text-faint);
     background:transparent; border:1px solid var(--line); border-radius:5px;
@@ -296,7 +335,7 @@
       <p>Every channel maps to the same fields — from, subject, body, replyTarget — before it ever reaches the agent. Only Gmail + one LLM provider are required to run this; every other integration below is env-gated and skips cleanly when unset.</p>
     </div>
 
-    <div class="panel reveal">
+    <div class="panel reveal flow-desktop">
       <div class="panel-inner">
         <span class="panel-label">full pipeline · solid = required, dashed = optional / env-gated</span>
         <span class="panel-scroll-hint">swipe to see full diagram →</span>
