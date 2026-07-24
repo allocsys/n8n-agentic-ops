@@ -14,6 +14,13 @@ triage/routing logic (`mock/workflow.mock.json`) you can import into a free
 local n8n instance and execute immediately, no Gmail/Telegram/WhatsApp/CRM/
 LLM accounts required.
 
+**Want the real CRM backend running live in one click?** See
+[`crm-worker/README.md`](crm-worker/README.md) — a "Deploy to Cloudflare
+Workers" button spins up the CRM stand-in (API + dashboard) in your own
+Cloudflare account with no manual setup. (Full plug-and-play for the n8n
+side — one-click host + guided OAuth connect — is scoped but not yet built;
+see the project's Notion plan.)
+
 ## Architecture
 
 ```mermaid
