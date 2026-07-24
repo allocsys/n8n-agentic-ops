@@ -26,28 +26,31 @@ Clicking this:
   when the button prompts you, or workflows will disappear on every
   restart.)
 
-## One remaining manual step
+## URL config: mostly automatic now, one manual step left
 
 Render has no way to know a service's own public URL *before* it's
-deployed, and the CRM Worker doesn't exist until you deploy it
-separately, so `render.yaml` ships with four placeholder env vars
-(`N8N_HOST`, `N8N_EDITOR_BASE_URL`, `WEBHOOK_URL`, `CRM_WORKER_BASE_URL`).
-After the first deploy finishes:
+deployed. `N8N_HOST`, `N8N_EDITOR_BASE_URL`, and `WEBHOOK_URL` used to be
+placeholder env vars you had to paste in by hand after the first deploy --
+they're not anymore. This service builds from `n8n-host/Dockerfile`, a thin
+wrapper around the official `n8nio/n8n` image whose entrypoint
+(`render-entrypoint.sh`) reads Render's own auto-injected
+`RENDER_EXTERNAL_HOSTNAME`/`RENDER_EXTERNAL_URL` (set for every web service,
+no setup needed) and exports them as `N8N_HOST`/`N8N_EDITOR_BASE_URL`/
+`WEBHOOK_URL` before n8n starts. This works on every deploy and redeploy,
+not just the first one -- if the service's URL ever changes, the values
+follow automatically. An explicit override in the Render dashboard still
+takes precedence if you ever need one.
 
-1. Copy the `https://your-service.onrender.com` URL Render gives you.
+**`CRM_WORKER_BASE_URL` is the one value that's still manual** -- it points
+at a separate Cloudflare Workers deployment, a different platform Render
+has no visibility into, so there's nothing for Render to auto-derive it
+from:
+
+1. Deploy the CRM Worker first (`crm-worker/README.md`) and copy its
+   `*.workers.dev` URL.
 2. In the Render dashboard -> your service -> Environment, replace the
-   `REPLACE_WITH_...` placeholders: `N8N_HOST` gets just the hostname
-   (`your-service.onrender.com`), `N8N_EDITOR_BASE_URL` and `WEBHOOK_URL`
-   get the full URL (`https://your-service.onrender.com`), and
-   `CRM_WORKER_BASE_URL` gets your deployed Worker's `*.workers.dev` URL
-   (see `crm-worker/README.md` -- deploy that first if you haven't).
-3. Save -- Render redeploys automatically with the real values, and OAuth
-   redirect URIs (Gmail/Drive/Sheets "Connect" buttons in Phase 2) will
-   resolve correctly.
-
-This mirrors the one paste-in-a-URL step already documented in
-`crm-worker/README.md` for `CRM_WORKER_BASE_URL` -- same reason (a
-deploy-time value can't be known before the deploy exists), same fix.
+   `REPLACE_WITH_YOUR_CRM_WORKER_URL` placeholder with that URL.
+3. Save -- Render redeploys automatically with the real value.
 
 ## Logging in
 
