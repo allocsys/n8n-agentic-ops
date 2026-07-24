@@ -1,0 +1,10 @@
+{
+  "_comment": "Shape of a Telegram Bot API 'message' update, trimmed to the fields Extract Telegram Fields reads. Use as pinData on the Telegram Trigger node in the real workflow.json to test the real node wiring offline, without a live Telegram bot credential.",
+  "message": {
+    "message_id": 4821,
+    "date": 1753351200,
+    "text": "Hey, what are your support hours?",
+    "from": { "id": 123456789, "first_name": "Demo", "username": "demo_user" },
+    "chat": { "id": 123456789, "type": "private" }
+  }
+}
