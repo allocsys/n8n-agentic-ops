@@ -24,8 +24,18 @@ jobs:
 
       - run: npm install
 
+      - name: Check for Cloudflare credentials
+        id: creds
+        run: |
+          if [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] && [ -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "has_creds=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_creds=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy to Cloudflare Workers
         id: deploy
+        if: steps.creds.outputs.has_creds == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -38,10 +48,26 @@ jobs:
           fi
           echo "worker_url=$URL" >> "$GITHUB_OUTPUT"
 
+      - name: Mock deploy (no Cloudflare credentials configured yet)
+        id: mock_deploy
+        if: steps.creds.outputs.has_creds == 'false'
+        run: |
+          echo "CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID secrets not set — skipping real Cloudflare deploy."
+          echo "This run produces a placeholder URL only. No worker was actually deployed."
+          echo "worker_url=https://crm-worker-MOCK-not-deployed.workers.dev" >> "$GITHUB_OUTPUT"
+
       - name: Write deployed URL back into the repo
         run: |
-          echo "${{ steps.deploy.outputs.worker_url }}" > DEPLOYED_URL.txt
-          echo "Last deployed: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> DEPLOYED_URL.txt
+          if [ "${{ steps.creds.outputs.has_creds }}" = "true" ]; then
+            URL="${{ steps.deploy.outputs.worker_url }}"
+            MODE="real"
+          else
+            URL="${{ steps.mock_deploy.outputs.worker_url }}"
+            MODE="MOCK — no Cloudflare credentials configured, nothing was actually deployed"
+          fi
+          echo "$URL" > DEPLOYED_URL.txt
+          echo "Mode: $MODE" >> DEPLOYED_URL.txt
+          echo "Last run: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> DEPLOYED_URL.txt
 
       - name: Commit DEPLOYED_URL.txt if it changed
         run: |
