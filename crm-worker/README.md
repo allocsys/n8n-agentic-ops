@@ -36,7 +36,17 @@ you won't be able to just open it in a browser tab anymore.
 
 ## Setup (zero-touch)
 
-Import this repo into the Cloudflare dashboard (Workers & Pages → Create →
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops)
+
+One click deploys this Worker straight to your own Cloudflare account — no
+Cloudflare dashboard clicking, no CLI. It uses the repo-root `wrangler.toml`
+automatically (see below for why it lives there), and D1 auto-provisions on
+first request same as the manual path, so there's nothing else to configure
+before it's live. Once deployed, copy the `*.workers.dev` URL Cloudflare
+gives you into n8n's `CRM_WORKER_BASE_URL` variable.
+
+Prefer to do it by hand, or the button doesn't work for your setup? Import
+this repo into the Cloudflare dashboard instead (Workers & Pages → Create →
 Import a repository) and deploy — no root directory override needed, since
 the config lives at the repo root (`/wrangler.toml`, not
 `crm-worker/wrangler.toml`) specifically so Cloudflare finds it
