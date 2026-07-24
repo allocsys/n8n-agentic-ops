@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: n8n-agentic-ops
+    runtime: image
+    image:
+      url: docker.io/n8nio/n8n:latest
+    plan: starter
+    envVars:
+      - key: N8N_PORT
+        value: "5678"
+      - key: N8N_PROTOCOL
+        value: https
+      - key: NODE_ENV
+        value: production
+      - key: GENERIC_TIMEZONE
+        value: UTC
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true"
+      - key: N8N_BASIC_AUTH_USER
+        value: admin
+      - key: N8N_BASIC_AUTH_PASSWORD
+        generateValue: true
+      # Placeholders -- see n8n-host/README.md "One remaining manual step".
+      # Render doesn't support self-referencing a service's own public URL
+      # inside render.yaml, so these three get filled in once, after first
+      # deploy, from the Render dashboard (same pattern as CRM_WORKER_BASE_URL
+      # in crm-worker/README.md).
+      - key: N8N_HOST
+        value: REPLACE_WITH_YOUR_RENDER_HOSTNAME
+      - key: N8N_EDITOR_BASE_URL
+        value: REPLACE_WITH_YOUR_RENDER_URL
+      - key: WEBHOOK_URL
+        value: REPLACE_WITH_YOUR_RENDER_URL
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n
+      sizeGB: 1
