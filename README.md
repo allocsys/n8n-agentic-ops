@@ -144,10 +144,11 @@ each attachment gets its own row in an `Attachments` tab (`messageId`,
   schema (category/priority/summary/suggested_reply/needs_human) so
   downstream nodes (Sheets, CRM, LINE) can route deterministically instead
   of parsing prose.
-- **One workflow, three integration surfaces.** Gmail (source + draft
-  output), Google Sheets (audit log), and two outbound HTTP calls (a
-  generic CRM ticket API + LINE's push-message API) — showing the same
-  agent pattern extends to whatever channel/CRM a real client already uses.
+- **One workflow, many integration surfaces.** Three inbound/reply
+  channels (Gmail, Telegram, WhatsApp), Google Sheets (audit log), Google
+  Drive (attachment uploads), a generic CRM ticket API, and ops-alert
+  pushes over LINE, Telegram, and WhatsApp — showing the same agent
+  pattern extends to whatever channels/CRM a real client already uses.
 
 ## Tech stack
 
