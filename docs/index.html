@@ -217,6 +217,51 @@
   }
   footer a{text-decoration:none; color:var(--text-dim);}
   footer a:hover{color:var(--text);}
+
+  /* ---- hybrid responsive: tablet ---- */
+  @media (max-width:900px){
+    section{padding:64px 0;}
+    .hero{padding:56px 0 36px;}
+    .grid3{grid-template-columns:repeat(2,1fr);}
+  }
+
+  /* ---- hybrid responsive: mobile ---- */
+  @media (max-width:680px){
+    .wrap{padding:0 18px;}
+    .navbar{padding:13px 18px;}
+    .brand{font-size:12.5px;}
+    nav{display:none;}
+    .navcta{font-size:11px; padding:6px 10px;}
+
+    .hero{padding:44px 0 32px;}
+    .hero-top{gap:22px;}
+    .hero h1{font-size:clamp(28px,8vw,38px);}
+    .hero p.sub{font-size:15px; margin-top:14px;}
+    .hero-ctas{flex-direction:column; align-items:stretch; margin-top:24px;}
+    .hero-ctas .btn{justify-content:center;}
+    .terminal{width:100%; min-width:0;}
+
+    section{padding:48px 0;}
+    .section-head{margin-bottom:32px;}
+    .section-head p{font-size:14.5px;}
+
+    .grid3, .grid2{grid-template-columns:1fr; gap:14px;}
+    .card{padding:20px;}
+
+    .panel-inner{padding:22px 0 0; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    .panel-label{left:16px;}
+    svg.flow{width:640px; max-width:none;}
+
+    .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    table{min-width:480px;}
+    th,td{padding:12px 10px; font-size:13px;}
+
+    footer{padding:28px 0; flex-direction:column; align-items:flex-start;}
+  }
+
+  @media (max-width:400px){
+    .hero h1{font-size:7vw;}
+  }
 </style>
 </head>
 <body>
@@ -393,7 +438,7 @@
       <h2>What's actually wired together.</h2>
     </div>
     <div class="panel reveal" style="padding:8px;">
-      <div style="background:var(--bg-panel-2); border-radius:10px; padding:6px 20px;">
+      <div class="table-wrap" style="background:var(--bg-panel-2); border-radius:10px; padding:6px 20px;">
         <table>
           <tr><th>Orchestration</th><td>n8n (cloud), @n8n/n8n-nodes-langchain</td></tr>
           <tr><td>LLM</td><td>OpenAI gpt-4o-mini → Gemini 1.5-flash → Claude 3.5-sonnet, fallback chain</td></tr>
