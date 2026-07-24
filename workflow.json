@@ -179,7 +179,7 @@
             "priority": "={{ $json.output.priority }}",
             "summary": "={{ $json.output.summary }}",
             "needs_human": "={{ $json.output.needs_human }}",
-            "attachment_link": "={{ $('Upload Attachment to Drive').isExecuted ? $('Upload Attachment to Drive').item.json.webViewLink : '' }}"
+            "attachment_link": "={{ $('Upload Attachment to Drive').item?.json?.webViewLink ?? '' }}"
           }
         }
       },
