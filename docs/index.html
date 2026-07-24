@@ -64,7 +64,7 @@
   .reveal.in{opacity:1; transform:translateY(0);}
   @media (prefers-reduced-motion: reduce){
     .reveal{opacity:1; transform:none; transition:none;}
-    *{animation-duration:0.001s !important; animation-iteration-count:1 !important;}
+    *:not(.flow-dot){animation-duration:0.001s !important; animation-iteration-count:1 !important;}
   }
 
   header{
@@ -232,12 +232,6 @@
     18%{opacity:1;}
     82%{opacity:1;}
     100%{transform:translateY(11px); opacity:0;}
-  }
-  @media (prefers-reduced-motion: reduce){
-    /* the generic *{animation-duration:0.001s} rule above would otherwise snap
-       this dot onto its opacity:0 end-frame and leave it permanently invisible
-       instead of just static — keep it visible and simply non-animating */
-    .flow-dot{animation:none !important; opacity:1 !important; transform:none !important;}
   }
   .flow-side-notes{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
   .copy{
