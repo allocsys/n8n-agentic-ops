@@ -1,9 +1,15 @@
-# Agentic Email Triage & Ops Automation (n8n)
+# Agentic Multi-Channel Triage & Ops Automation (n8n)
 
 A reference n8n workflow for a common services-business need: a shared inbox
-(now spanning email, Telegram, and WhatsApp) gets messages that need to be
-**read, classified, logged, and either answered or escalated** — without a
-human manually triaging every message.
+gets messages that need to be **read, classified, logged, and either
+answered or escalated** — without a human manually triaging every message.
+
+**Inbound channels today:** Gmail, Telegram, WhatsApp — each with its own
+trigger and field-extraction node, normalized into one shape before the AI
+Agent sees it (see Architecture below). **Ops alerting** also goes out over
+LINE for urgent/escalated messages. **On the roadmap:** Instagram DMs as a
+fourth inbound channel — same pattern (extract-fields node → Normalized
+Inbound), not yet built.
 
 This repo is a portfolio piece: an importable `workflow.json` plus the
 reasoning behind the design, not a specific client's production system.
