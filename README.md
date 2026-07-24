@@ -11,8 +11,9 @@ LINE for urgent/escalated messages. **On the roadmap:** Instagram DMs as a
 fourth inbound channel — same pattern (extract-fields node → Normalized
 Inbound), not yet built.
 
-This repo is a portfolio piece: an importable `workflow.json` plus the
-reasoning behind the design, not a specific client's production system.
+This is a working system: an importable `workflow.json` plus the
+reasoning behind the design, ready to run against real Gmail/Telegram/
+WhatsApp/CRM accounts.
 
 **Want to see it run without setting up any credentials?** See
 [`mock/README.md`](mock/README.md) — a zero-token version of the same
