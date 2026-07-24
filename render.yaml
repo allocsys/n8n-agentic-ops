@@ -1,9 +1,9 @@
 services:
   - type: web
     name: n8n-agentic-ops
-    runtime: image
-    image:
-      url: docker.io/n8nio/n8n:latest
+    runtime: docker
+    dockerfilePath: n8n-host/Dockerfile
+    dockerContext: n8n-host
     plan: starter
     envVars:
       - key: N8N_PORT
