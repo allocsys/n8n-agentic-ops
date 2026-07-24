@@ -1,0 +1,12 @@
+{
+  "_comment": "Shape of a Gmail Trigger output item (n8n-nodes-base.gmailTrigger), trimmed to the fields Extract Email Fields reads. Use as pinData on the Gmail Trigger node in the real workflow.json to test the real node wiring offline, without a live Gmail credential.",
+  "id": "sample-msg-0001",
+  "subject": "Refund never processed, this is urgent",
+  "text": "I was charged twice last week and still have no refund. This is extremely frustrating and I need this fixed today.",
+  "date": "2026-07-24T10:00:00.000Z",
+  "from": {
+    "value": [
+      { "address": "angry.customer@example.com", "name": "Angry Customer" }
+    ]
+  }
+}
