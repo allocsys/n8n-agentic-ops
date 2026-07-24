@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "wrangler dev -c ../wrangler.toml",
+    "deploy": "wrangler deploy -c ../wrangler.toml",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:create": "wrangler d1 create n8n-crm-worker-db",
-    "db:migrate:local": "wrangler d1 execute n8n-crm-worker-db --file=./schema.sql",
-    "db:migrate:remote": "wrangler d1 execute n8n-crm-worker-db --file=./schema.sql --remote"
+    "db:create": "wrangler d1 create n8n-crm-worker-db -c ../wrangler.toml",
+    "db:migrate:local": "wrangler d1 execute n8n-crm-worker-db --file=./schema.sql -c ../wrangler.toml",
+    "db:migrate:remote": "wrangler d1 execute n8n-crm-worker-db --file=./schema.sql --remote -c ../wrangler.toml"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.18.6",
