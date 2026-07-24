@@ -17,8 +17,14 @@ LLM accounts required.
 **Want the real CRM backend running live in one click?** See
 [`crm-worker/README.md`](crm-worker/README.md) — a "Deploy to Cloudflare
 Workers" button spins up the CRM stand-in (API + dashboard) in your own
-Cloudflare account with no manual setup. (Full plug-and-play for the n8n
-side — one-click host + guided OAuth connect — is scoped but not yet built;
+Cloudflare account with no manual setup.
+
+**Want your own n8n running in one click, too?** See
+[`n8n-host/README.md`](n8n-host/README.md) — a "Deploy to Render" button
+spins up a real n8n instance (no server, no Docker CLI) so you can import
+`workflow.json` and use n8n's native OAuth "Connect" buttons for
+Gmail/Drive/Sheets. (Guided step-by-step OAuth setup docs and trimming
+Telegram/WhatsApp/Drive to optional are still scoped but not yet built;
 see the project's Notion plan.)
 
 ## Architecture
