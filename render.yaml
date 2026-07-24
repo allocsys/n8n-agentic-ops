@@ -22,17 +22,12 @@ services:
         value: admin
       - key: N8N_BASIC_AUTH_PASSWORD
         generateValue: true
-      # Placeholders -- see n8n-host/README.md "One remaining manual step".
-      # Render doesn't support self-referencing a service's own public URL
-      # inside render.yaml, so these three get filled in once, after first
-      # deploy, from the Render dashboard (same pattern as CRM_WORKER_BASE_URL
-      # in crm-worker/README.md).
-      - key: N8N_HOST
-        value: REPLACE_WITH_YOUR_RENDER_HOSTNAME
-      - key: N8N_EDITOR_BASE_URL
-        value: REPLACE_WITH_YOUR_RENDER_URL
-      - key: WEBHOOK_URL
-        value: REPLACE_WITH_YOUR_RENDER_URL
+      # N8N_HOST, N8N_EDITOR_BASE_URL, and WEBHOOK_URL are intentionally
+      # NOT listed here anymore -- n8n-host/render-entrypoint.sh derives
+      # them automatically at container start from Render's own
+      # RENDER_EXTERNAL_HOSTNAME/RENDER_EXTERNAL_URL, which Render injects
+      # for every web service with no setup needed. See n8n-host/Dockerfile.
+      #
       # Points workflow.json's CRM nodes ($env.CRM_WORKER_BASE_URL) at your
       # deployed CRM Worker. Same reason as the three placeholders above --
       # the Worker doesn't exist yet at blueprint-apply time -- so fill this
