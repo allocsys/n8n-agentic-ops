@@ -8,6 +8,12 @@ human manually triaging every message.
 This repo is a portfolio piece: an importable `workflow.json` plus the
 reasoning behind the design, not a specific client's production system.
 
+**Want to see it run without setting up any credentials?** See
+[`mock/README.md`](mock/README.md) — a zero-token version of the same
+triage/routing logic (`mock/workflow.mock.json`) you can import into a free
+local n8n instance and execute immediately, no Gmail/Telegram/WhatsApp/CRM/
+LLM accounts required.
+
 ## Architecture
 
 ```mermaid
