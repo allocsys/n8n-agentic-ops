@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       # crm-worker has no committed package-lock.json yet, so setup-node's
       # built-in npm cache can't be used (it requires a lockfile to key
