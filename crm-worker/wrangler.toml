@@ -1,0 +1,18 @@
+name = "n8n-crm-worker"
+main = "src/index.js"
+compatibility_date = "2026-07-23"
+
+# No database_id set on purpose: Wrangler auto-provisions a new D1 database
+# named "n8n-crm-worker-db" the first time this Worker is deployed (works
+# from `wrangler deploy` and from the Cloudflare dashboard's Git integration
+# too). See:
+# https://developers.cloudflare.com/workers/wrangler/configuration/#automatic-provisioning
+#
+# Tables (contacts, tickets) are created lazily by the Worker at runtime
+# (see ensureSchema() in src/index.js) and contacts are seeded with sample
+# rows on first run, since `wrangler d1 migrations apply` can't target an
+# auto-provisioned database (no database_id gets written back to this file).
+# That means: import this repo, deploy, done -- no separate schema/seed step.
+[[d1_databases]]
+binding = "DB"
+database_name = "n8n-crm-worker-db"
