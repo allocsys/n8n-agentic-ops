@@ -1,0 +1,234 @@
+{
+  "name": "Agentic Multi-Channel Triage & CRM Ops — MOCK (no credentials required)",
+  "nodes": [
+    {
+      "id": "manual-trigger",
+      "name": "Run Mock Demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1400, 200],
+      "parameters": {}
+    },
+    {
+      "id": "mock-gmail-msg",
+      "name": "Mock Gmail Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1160, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "channel", "type": "string", "value": "email" },
+            { "name": "from", "type": "string", "value": "angry.customer@example.com" },
+            { "name": "subject", "type": "string", "value": "Refund never processed, this is urgent" },
+            { "name": "body", "type": "string", "value": "I was charged twice last week and still have no refund. This is extremely frustrating and I need this fixed today." },
+            { "name": "receivedAt", "type": "string", "value": "={{ $now.toISO() }}" },
+            { "name": "messageId", "type": "string", "value": "mock-gmail-0001" },
+            { "name": "replyTarget", "type": "string", "value": "angry.customer@example.com" }
+          ]
+        }
+      },
+      "notes": "Stands in for the real Gmail Trigger + Extract Email Fields nodes. Edit these values to try different scenarios."
+    },
+    {
+      "id": "mock-telegram-msg",
+      "name": "Mock Telegram Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1160, 200],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "channel", "type": "string", "value": "telegram" },
+            { "name": "from", "type": "string", "value": "@demo_user" },
+            { "name": "subject", "type": "string", "value": "Telegram message from Demo User" },
+            { "name": "body", "type": "string", "value": "Hey, what are your support hours?" },
+            { "name": "receivedAt", "type": "string", "value": "={{ $now.toISO() }}" },
+            { "name": "messageId", "type": "string", "value": "mock-telegram-0001" },
+            { "name": "replyTarget", "type": "string", "value": "123456789" }
+          ]
+        }
+      },
+      "notes": "Stands in for the real Telegram Trigger + Extract Telegram Fields nodes."
+    },
+    {
+      "id": "mock-whatsapp-msg",
+      "name": "Mock WhatsApp Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1160, 400],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "channel", "type": "string", "value": "whatsapp" },
+            { "name": "from", "type": "string", "value": "+15550001111" },
+            { "name": "subject", "type": "string", "value": "WhatsApp message" },
+            { "name": "body", "type": "string", "value": "Win a free prize now, click this link!!!" },
+            { "name": "receivedAt", "type": "string", "value": "={{ $now.toISO() }}" },
+            { "name": "messageId", "type": "string", "value": "mock-whatsapp-0001" },
+            { "name": "replyTarget", "type": "string", "value": "+15550001111" }
+          ]
+        }
+      },
+      "notes": "Stands in for the real WhatsApp Trigger + Extract WhatsApp Fields nodes. Sample body is intentionally spam-like to demo that routing branch."
+    },
+    {
+      "id": "normalize-inbound",
+      "name": "Normalized Inbound",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-940, 200],
+      "parameters": {},
+      "notes": "Same junction role as in the real workflow. Only one of the three Mock *Message nodes needs to be connected/run at a time -- by default all three feed in so you can pick which branch to execute."
+    },
+    {
+      "id": "mock-ai-agent",
+      "name": "Mock AI Agent (canned triage)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-740, 200],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Stands in for the real AI Agent node (OpenAI/Gemini/Claude + KB RAG + CRM lookup tool + structured output parser).\n// Uses simple keyword rules instead of a live LLM call, so this runs with zero API keys.\n// Output shape matches the real node's structured-output schema exactly, so all downstream\n// nodes (Route by Category/Priority, Route Reply by Channel, logging) work unmodified.\nconst results = [];\nfor (const item of $input.all()) {\n  const body = (item.json.body || '').toLowerCase();\n  let category = 'general';\n  let priority = 'standard';\n  let summary = 'Routine inquiry, canned reply drafted.';\n  let suggested_reply = \"Thanks for reaching out! Our support hours are Mon-Fri 9am-6pm ET. Let us know if you have any other questions.\";\n  let needs_human = false;\n\n  if (body.includes('refund') || body.includes('angry') || body.includes('urgent') || body.includes('charged twice')) {\n    category = 'billing';\n    priority = 'urgent';\n    summary = 'Customer reports a double charge and no refund -- escalate to a human.';\n    suggested_reply = '';\n    needs_human = true;\n  } else if (body.includes('win a free') || body.includes('click this link') || body.includes('prize')) {\n    category = 'spam';\n    priority = 'standard';\n    summary = 'Detected as spam/promotional content.';\n    suggested_reply = '';\n    needs_human = false;\n  }\n\n  results.push({ json: { ...item.json, output: { category, priority, summary, suggested_reply, needs_human } } });\n}\nreturn results;"
+      }
+    },
+    {
+      "id": "route-priority",
+      "name": "Route by Category/Priority",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-480, 200],
+      "parameters": {
+        "rules": {
+          "values": [
+            { "outputKey": "urgent", "conditions": { "conditions": [ { "leftValue": "={{ $json.output.priority }}", "rightValue": "urgent", "operator": { "type": "string", "operation": "equals" } } ] } },
+            { "outputKey": "spam", "conditions": { "conditions": [ { "leftValue": "={{ $json.output.category }}", "rightValue": "spam", "operator": { "type": "string", "operation": "equals" } } ] } },
+            { "outputKey": "standard", "conditions": { "conditions": [ { "leftValue": "={{ $json.output.priority }}", "rightValue": "standard", "operator": { "type": "string", "operation": "equals" } } ] } }
+          ]
+        },
+        "options": { "fallbackOutput": "standard" }
+      },
+      "notes": "Identical logic to the real workflow's node of the same name -- no mocking needed here, it's pure conditional routing."
+    },
+    {
+      "id": "mock-log-sheet",
+      "name": "Mock Log to Ops Sheet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 40],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Stands in for the real Google Sheets append. Prints what the row would have been.\nreturn $input.all().map((item) => ({\n  json: {\n    mock_action: 'Would append row to Ops Log sheet',\n    row: {\n      timestamp: new Date().toISOString(),\n      channel: item.json.channel,\n      from: item.json.from,\n      subject: item.json.subject,\n      category: item.json.output.category,\n      priority: item.json.output.priority,\n      summary: item.json.output.summary,\n      needs_human: item.json.output.needs_human\n    }\n  }\n}));"
+      }
+    },
+    {
+      "id": "mock-crm-ticket",
+      "name": "Mock Create CRM Ticket (urgent)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 200],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Stands in for the real POST to the CRM Worker's /v1/tickets endpoint.\n// Response shape matches crm-worker/src/index.js exactly (created, ticket_id).\nreturn $input.all().map((item, i) => ({\n  json: {\n    mock_action: 'Would POST to CRM_WORKER_BASE_URL/v1/tickets',\n    request_body: {\n      email: item.json.from,\n      subject: item.json.subject,\n      summary: item.json.output.summary,\n      priority: 'high',\n      channel: item.json.channel\n    },\n    mock_response: { created: true, ticket_id: 9000 + i }\n  }\n}));"
+      }
+    },
+    {
+      "id": "mock-notify-ops",
+      "name": "Mock Notify Ops Team",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 360],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Stands in for the real LINE/Telegram/WhatsApp ops notification fan-out.\nreturn $input.all().map((item) => ({\n  json: {\n    mock_action: 'Would notify ops team on LINE + Telegram + WhatsApp',\n    message: `Urgent ${item.json.channel} message from ${item.json.from}: ${item.json.output.summary}`\n  }\n}));"
+      }
+    },
+    {
+      "id": "route-reply-channel",
+      "name": "Route Reply by Channel",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-60, 200],
+      "parameters": {
+        "rules": {
+          "values": [
+            { "outputKey": "email", "conditions": { "conditions": [ { "leftValue": "={{ $json.channel }}", "rightValue": "email", "operator": { "type": "string", "operation": "equals" } } ] } },
+            { "outputKey": "telegram", "conditions": { "conditions": [ { "leftValue": "={{ $json.channel }}", "rightValue": "telegram", "operator": { "type": "string", "operation": "equals" } } ] } },
+            { "outputKey": "whatsapp", "conditions": { "conditions": [ { "leftValue": "={{ $json.channel }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } } ] } }
+          ]
+        },
+        "options": { "fallbackOutput": "email" }
+      },
+      "notes": "Only reached for standard-priority messages, same as the real workflow."
+    },
+    {
+      "id": "mock-gmail-draft",
+      "name": "Mock Create Gmail Draft Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 40],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $input.all().map((item) => ({ json: { mock_action: 'Would create Gmail draft reply', to: item.json.from, subject: 'Re: ' + item.json.subject, body: item.json.output.suggested_reply } }));"
+      }
+    },
+    {
+      "id": "mock-telegram-reply",
+      "name": "Mock Send Telegram Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 200],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $input.all().map((item) => ({ json: { mock_action: 'Would send Telegram reply', chatId: item.json.replyTarget, text: item.json.output.suggested_reply } }));"
+      }
+    },
+    {
+      "id": "mock-whatsapp-reply",
+      "name": "Mock Send WhatsApp Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 360],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $input.all().map((item) => ({ json: { mock_action: 'Would send WhatsApp reply', to: item.json.replyTarget, text: item.json.output.suggested_reply } }));"
+      }
+    }
+  ],
+  "connections": {
+    "Run Mock Demo": {
+      "main": [
+        [
+          { "node": "Mock Gmail Message", "type": "main", "index": 0 },
+          { "node": "Mock Telegram Message", "type": "main", "index": 0 },
+          { "node": "Mock WhatsApp Message", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Mock Gmail Message": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
+    "Mock Telegram Message": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
+    "Mock WhatsApp Message": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
+    "Normalized Inbound": { "main": [ [ { "node": "Mock AI Agent (canned triage)", "type": "main", "index": 0 } ] ] },
+    "Mock AI Agent (canned triage)": { "main": [ [ { "node": "Route by Category/Priority", "type": "main", "index": 0 } ] ] },
+    "Route by Category/Priority": {
+      "main": [
+        [ { "node": "Mock Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Mock Create CRM Ticket (urgent)", "type": "main", "index": 0 }, { "node": "Mock Notify Ops Team", "type": "main", "index": 0 } ],
+        [ { "node": "Mock Log to Ops Sheet", "type": "main", "index": 0 } ],
+        [ { "node": "Mock Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Route Reply by Channel", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Route Reply by Channel": {
+      "main": [
+        [ { "node": "Mock Create Gmail Draft Reply", "type": "main", "index": 0 } ],
+        [ { "node": "Mock Send Telegram Reply", "type": "main", "index": 0 } ],
+        [ { "node": "Mock Send WhatsApp Reply", "type": "main", "index": 0 } ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
