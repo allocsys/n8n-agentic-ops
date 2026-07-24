@@ -33,6 +33,15 @@ services:
         value: REPLACE_WITH_YOUR_RENDER_URL
       - key: WEBHOOK_URL
         value: REPLACE_WITH_YOUR_RENDER_URL
+      # Points workflow.json's CRM nodes ($env.CRM_WORKER_BASE_URL) at your
+      # deployed CRM Worker. Same reason as the three placeholders above --
+      # the Worker doesn't exist yet at blueprint-apply time -- so fill this
+      # in after deploying it via crm-worker/README.md's "Deploy to
+      # Cloudflare Workers" button. This must be a real container env var
+      # (not n8n's in-app Settings -> Variables) since the workflow reads
+      # it via $env, not $vars.
+      - key: CRM_WORKER_BASE_URL
+        value: REPLACE_WITH_YOUR_CRM_WORKER_URL
     disk:
       name: n8n-data
       mountPath: /home/node/.n8n
