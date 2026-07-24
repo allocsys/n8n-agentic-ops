@@ -87,7 +87,7 @@
       "parameters": {
         "toolDescription": "Look up an existing CRM contact/deal by email address before drafting a reply, so the agent knows account history and open tickets.",
         "method": "GET",
-        "url": "https://api.example-crm.com/v1/contacts/lookup",
+        "url": "={{ $env.CRM_WORKER_BASE_URL + '/v1/contacts/lookup' }}",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [ { "name": "email", "value": "={{ $fromAI('email') }}" } ]
@@ -188,7 +188,7 @@
       "position": [ -160, 220 ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.example-crm.com/v1/tickets",
+        "url": "={{ $env.CRM_WORKER_BASE_URL + '/v1/tickets' }}",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
