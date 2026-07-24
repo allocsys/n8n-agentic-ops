@@ -1,3 +1,0 @@
-https://crm-worker-MOCK-not-deployed.workers.dev
-Mode: MOCK — no Cloudflare credentials configured, nothing was actually deployed
-Last run: 2026-07-24T14:33:45Z
