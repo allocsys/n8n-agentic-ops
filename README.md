@@ -23,9 +23,10 @@ Cloudflare account with no manual setup.
 [`n8n-host/README.md`](n8n-host/README.md) — a "Deploy to Render" button
 spins up a real n8n instance (no server, no Docker CLI) so you can import
 `workflow.json` and use n8n's native OAuth "Connect" buttons for
-Gmail/Drive/Sheets. (Guided step-by-step OAuth setup docs and trimming
-Telegram/WhatsApp/Drive to optional are still scoped but not yet built;
-see the project's Notion plan.)
+Gmail/Drive/Sheets. Telegram, WhatsApp, and Drive are now optional —
+skip the accounts you don't want (see Requirements below). Guided
+step-by-step OAuth setup docs (SETUP.md) are still scoped but not yet
+built; see the project's Notion plan.
 
 ## Architecture
 
@@ -166,26 +167,36 @@ each attachment gets its own row in an `Attachments` tab (`messageId`,
 
 ## Requirements to run
 
+**Required:**
+
 - n8n (self-hosted or cloud) with the LangChain nodes enabled
   (`@n8n/n8n-nodes-langchain`)
-- An OpenAI credential, a Google Gemini (PaLM API) credential, and an
-  Anthropic credential — all three are wired into the AI Agent's fallback
-  chain; if you only want one or two providers, delete the unused chat
-  model node(s) and their connection
+- An OpenAI credential (default primary model in the AI Agent's fallback chain)
 - Gmail OAuth2 credential with send + draft scopes
-- A Telegram Bot API token (`telegramApi` credential) — used for both
-  inbound triage and outbound ops alerts/replies
-- A WhatsApp Business Cloud API credential (`whatsAppTriggerApi` for the
-  trigger, `whatsAppApi` for sending) — same dual inbound/outbound use
-- Google Drive OAuth2 credential (used to upload email attachments; set
-  `folderId` in the "Upload Attachment to Drive" node to a real Drive folder)
 - Google Sheets OAuth2 credential (the target spreadsheet needs both a
   `Log` tab and an `Attachments` tab — see above)
 - A vector store (Qdrant used here; swappable for Pinecone/Supabase/etc.)
-- Generic HTTP header auth credentials for your CRM and LINE channel token
-- Two environment variables for ops-alert routing: `TELEGRAM_OPS_CHAT_ID`
-  and `WHATSAPP_OPS_NUMBER` (alongside the existing `LINE_OPS_GROUP_ID` and
-  `CRM_WORKER_BASE_URL`)
+- Generic HTTP header auth credential for your CRM, plus the
+  `CRM_WORKER_BASE_URL` environment variable
+
+**Optional — each turns on independently, no workflow-graph edits needed:**
+
+- Google Gemini and/or Anthropic credentials — extra fallback models in the
+  AI Agent's LLM chain; if you only want OpenAI, delete the unused chat
+  model node(s) and their connection
+- Google Drive OAuth2 credential + `GOOGLE_DRIVE_FOLDER_ID` env var — a
+  "Drive Configured?" IF node gates the entire attachment-upload branch;
+  leave the env var unset and it's skipped entirely, no Drive account needed
+- LINE / Telegram / WhatsApp **ops alerts** — each has its own "Configured?"
+  IF node, gated on `LINE_OPS_GROUP_ID` / `TELEGRAM_OPS_CHAT_ID` /
+  `WHATSAPP_OPS_NUMBER` respectively; set the ones you want, leave the rest
+  unset and those alert nodes are simply never reached
+- Telegram / WhatsApp **inbound channels** (Telegram Bot API credential /
+  WhatsApp Business Cloud API credentials) — these two trigger nodes ship
+  `disabled: true` by default, since n8n checks a trigger's credential at
+  workflow-activation time and that can't be gated by a downstream env-var
+  IF the way the action nodes above are. To turn one on: attach a real
+  credential to the trigger node and re-enable it in the n8n editor.
 
 ## License
 
