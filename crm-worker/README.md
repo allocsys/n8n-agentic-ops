@@ -20,11 +20,14 @@ for the `workflow.json` in this repo — a real, live HTTP API for the
 ## Setup (zero-touch)
 
 Import this repo into the Cloudflare dashboard (Workers & Pages → Create →
-Import a repository), set the **root directory** to `crm-worker/`, and
-deploy. No manual D1 setup needed:
+Import a repository) and deploy — no root directory override needed, since
+the config lives at the repo root (`/wrangler.toml`, not
+`crm-worker/wrangler.toml`) specifically so Cloudflare finds it
+automatically. No manual D1 setup needed either:
 
-- `wrangler.toml` omits `database_id`, so Wrangler auto-provisions a new D1
-  database (`n8n-crm-worker-db`) and binds it as `DB` on first deploy.
+- The root `wrangler.toml` omits `database_id`, so Wrangler auto-provisions
+  a new D1 database (`n8n-crm-worker-db`) and binds it as `DB` on first
+  deploy.
 - The Worker creates its own `contacts`/`tickets` tables and seeds two
   sample contacts on first request (see `ensureSchema()` in `src/index.js`).
 
