@@ -225,11 +225,19 @@
     box-shadow:0 0 0 3px rgba(62,207,207,0.15);
     animation:flowDown 2.2s ease-in-out infinite;
   }
+  .flow-dot.d2{animation-delay:0.6s;}
+  .flow-dot.d3{animation-delay:1.2s;}
   @keyframes flowDown{
     0%{transform:translateY(-11px); opacity:0;}
     18%{opacity:1;}
     82%{opacity:1;}
     100%{transform:translateY(11px); opacity:0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    /* the generic *{animation-duration:0.001s} rule above would otherwise snap
+       this dot onto its opacity:0 end-frame and leave it permanently invisible
+       instead of just static — keep it visible and simply non-animating */
+    .flow-dot{animation:none !important; opacity:1 !important; transform:none !important;}
   }
   .flow-side-notes{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
   .copy{
@@ -284,7 +292,11 @@
 
     .flow-desktop{display:none;}
     .mobile-flow{display:block;}
-    .mobile-flow .panel-inner{overflow-x:visible; padding:22px 14px 14px;}
+    .mobile-flow .panel-inner{overflow-x:visible; padding:20px 14px 16px;}
+    .mobile-flow .panel-label{
+      position:static; display:block;
+      margin:0 0 16px; line-height:1.5;
+    }
     .flow-node{padding:12px 14px;}
     .flow-node-sub{font-size:10px;}
     .flow-side-notes{border-top:1px solid var(--line-soft); padding-top:16px;}
@@ -460,20 +472,20 @@
             </div>
           </div>
 
-          <div class="flow-connector"><div class="flow-dot"></div></div>
+          <div class="flow-connector"><div class="flow-dot d1"></div></div>
 
           <div class="flow-node merge">
             <div class="flow-node-title">merge</div>
           </div>
 
-          <div class="flow-connector"><div class="flow-dot"></div></div>
+          <div class="flow-connector"><div class="flow-dot d2"></div></div>
 
           <div class="flow-node agent">
             <div class="flow-node-title">AI Agent</div>
             <div class="flow-node-sub">LLM: OpenAI (default)<br>+ Gemini/Claude opt-in (off)<br>Memory: per sender<br>Tools: RAG · CRM lookup<br>→ structured JSON output</div>
           </div>
 
-          <div class="flow-connector"><div class="flow-dot"></div></div>
+          <div class="flow-connector"><div class="flow-dot d3"></div></div>
 
           <div class="flow-group outcomes">
             <div class="flow-node outcome-urgent">
