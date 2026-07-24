@@ -529,57 +529,6 @@
       });
     });
   });
-
-  // Mock terminal run — illustrative only, not a live status feed
-  (function(){
-    const el = document.getElementById('termLines');
-    if(!el) return;
-    const lines = [
-      { text: '$ npx n8n', cls: 'prompt' },
-      { text: '→ importing mock/workflow.mock.json …', cls: 'dim' },
-      { text: '✓ gmail + telegram + whatsapp → normalized', cls: 'dim' },
-      { text: '✓ routed → urgent: CRM ticket + ops alert', cls: 'amber' },
-      { text: '✓ routed → standard: reply drafted', cls: 'cyan' },
-      { text: '✓ routed → spam: logged only', cls: 'faint' },
-      { text: '$ mock mode — no live credentials needed', cls: 'dim' }
-    ];
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(reduced){
-      lines.forEach(line=>{
-        const div = document.createElement('div');
-        div.className = 'term-line ' + line.cls;
-        div.textContent = line.text;
-        el.appendChild(div);
-      });
-      return;
-    }
-    let li = 0, ci = 0, div = null;
-    function step(){
-      if(li >= lines.length){
-        setTimeout(()=>{ el.innerHTML = ''; li = 0; ci = 0; div = null; step(); }, 2000);
-        return;
-      }
-      const line = lines[li];
-      if(ci === 0){
-        div = document.createElement('div');
-        div.className = 'term-line ' + line.cls;
-        div.innerHTML = '<span class="txt"></span><span class="caret"></span>';
-        el.appendChild(div);
-      }
-      const txt = div.querySelector('.txt');
-      if(ci <= line.text.length){
-        txt.textContent = line.text.slice(0, ci);
-        ci++;
-        setTimeout(step, 16 + Math.random()*24);
-      } else {
-        const caret = div.querySelector('.caret');
-        if(caret) caret.remove();
-        li++; ci = 0;
-        setTimeout(step, 280);
-      }
-    }
-    step();
-  })();
 </script>
 
 </body>
