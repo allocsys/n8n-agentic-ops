@@ -14,19 +14,26 @@ triage/routing logic (`mock/workflow.mock.json`) you can import into a free
 local n8n instance and execute immediately, no Gmail/Telegram/WhatsApp/CRM/
 LLM accounts required.
 
-**Want the real CRM backend running live in one click?** See
-[`crm-worker/README.md`](crm-worker/README.md) — a "Deploy to Cloudflare
-Workers" button spins up the CRM stand-in (API + dashboard) in your own
-Cloudflare account with no manual setup.
+**Want the real CRM backend running live in one click?**
 
-**Want your own n8n running in one click, too?** See
-[`n8n-host/README.md`](n8n-host/README.md) — a "Deploy to Render" button
-spins up a real n8n instance (no server, no Docker CLI) so you can import
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops)
+
+Spins up the CRM stand-in (API + dashboard) in your own Cloudflare account
+with no manual setup. Details: [`crm-worker/README.md`](crm-worker/README.md).
+
+**Want your own n8n running in one click, too?**
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allocsys/n8n-agentic-ops)
+
+Spins up a real n8n instance (no server, no Docker CLI) so you can import
 `workflow.json` and use n8n's native OAuth "Connect" buttons for
 Gmail/Drive/Sheets. Telegram, WhatsApp, and Drive are now optional —
-skip the accounts you don't want (see Requirements below). Guided
-step-by-step OAuth setup docs (SETUP.md) are still scoped but not yet
-built; see the project's Notion plan.
+skip the accounts you don't want (see Requirements below). Details:
+[`n8n-host/README.md`](n8n-host/README.md).
+
+**Then follow [`SETUP.md`](SETUP.md)** for the guided, step-by-step walk
+through n8n's native OAuth "Connect" flow for Gmail/Drive/Sheets — no
+raw API keys to paste.
 
 ## Architecture
 
