@@ -21,8 +21,10 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.1,
       "position": [ -1200, 560 ],
+      "disabled": true,
       "parameters": { "updates": [ "message" ] },
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Telegram (support bot)" } }
+      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Telegram (support bot)" } },
+      "notes": "Optional inbound channel, OFF by default. Trigger nodes can't be env-gated the way action nodes below are -- n8n validates a trigger's credential at workflow-activation time, before any if-logic runs, so an unconfigured trigger would block activation entirely. To enable: re-enable this node and attach a real Telegram Bot API credential."
     },
     {
       "id": "trigger-whatsapp",
@@ -30,8 +32,10 @@
       "type": "n8n-nodes-base.whatsAppTrigger",
       "typeVersion": 1,
       "position": [ -1200, 760 ],
+      "disabled": true,
       "parameters": { "updates": [ "messages" ] },
-      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_ME", "name": "WhatsApp (support number)" } }
+      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_ME", "name": "WhatsApp (support number)" } },
+      "notes": "Optional inbound channel, OFF by default, same reason as the Telegram Trigger: n8n checks trigger credentials at activation time, so this can't be gated by a downstream env-var if. To enable: re-enable this node and attach a real WhatsApp Business Cloud API credential."
     },
     {
       "id": "extract-fields",
@@ -130,6 +134,29 @@
       }
     },
     {
+      "id": "check-drive-enabled",
+      "name": "Drive Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [ -880, 340 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "drive-env-check",
+              "leftValue": "={{ $env.GOOGLE_DRIVE_FOLDER_ID }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "notes": "Optional-integration gate, sits between List Attachments and Loop Over Attachments. True output (GOOGLE_DRIVE_FOLDER_ID set) proceeds to the Drive upload loop; false output skips straight to Attachments Done. Attachment handling turns itself on the moment the env var is set and a real Drive credential is attached -- no graph changes needed."
+    },
+    {
       "id": "attachments-done",
       "name": "Attachments Done",
       "type": "n8n-nodes-base.noOp",
@@ -149,12 +176,13 @@
         "operation": "upload",
         "name": "={{ $json.fileName }}",
         "driveId": { "mode": "list", "value": "My Drive" },
-        "folderId": { "mode": "id", "value": "REPLACE_WITH_DRIVE_FOLDER_ID" },
+        "folderId": { "mode": "id", "value": "={{ $env.GOOGLE_DRIVE_FOLDER_ID }}" },
         "binaryPropertyName": "data",
         "options": {}
       },
       "onError": "continueRegularOutput",
-      "credentials": { "googleDriveOAuth2Api": { "id": "REPLACE_ME", "name": "Google Drive" } }
+      "credentials": { "googleDriveOAuth2Api": { "id": "REPLACE_ME", "name": "Google Drive" } },
+      "notes": "Optional integration, gated by the 'Drive Configured?' IF node upstream -- if GOOGLE_DRIVE_FOLDER_ID isn't set, this node is never reached, so the placeholder credential is never exercised."
     },
     {
       "id": "log-attachment-sheet",
@@ -422,6 +450,75 @@
       "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "CRM API Key" } }
     },
     {
+      "id": "check-line-enabled",
+      "name": "LINE Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [ -300, 340 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "line-env-check",
+              "leftValue": "={{ $env.LINE_OPS_GROUP_ID }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "notes": "Optional ops-alert channel. Skipped entirely if LINE_OPS_GROUP_ID isn't set -- the placeholder LINE credential is never exercised, so no LINE account is needed unless you want this alert."
+    },
+    {
+      "id": "check-telegram-ops-enabled",
+      "name": "Telegram Ops Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [ -300, 460 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "telegram-ops-env-check",
+              "leftValue": "={{ $env.TELEGRAM_OPS_CHAT_ID }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "notes": "Optional ops-alert channel, independent of the Telegram Trigger -- get urgent-message pings in Telegram without turning on Telegram as an inbound channel. Skipped entirely if TELEGRAM_OPS_CHAT_ID isn't set."
+    },
+    {
+      "id": "check-whatsapp-ops-enabled",
+      "name": "WhatsApp Ops Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [ -300, 580 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "whatsapp-ops-env-check",
+              "leftValue": "={{ $env.WHATSAPP_OPS_NUMBER }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "notes": "Optional ops-alert channel, independent of the WhatsApp Trigger. Skipped entirely if WHATSAPP_OPS_NUMBER isn't set."
+    },
+    {
       "id": "line-notify",
       "name": "Notify Ops Team (LINE)",
       "type": "n8n-nodes-base.httpRequest",
@@ -477,7 +574,8 @@
     "Extract Telegram Fields": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
     "Extract WhatsApp Fields": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
     "Normalized Inbound": { "main": [ [ { "node": "AI Agent - Triage & Draft", "type": "main", "index": 0 } ] ] },
-    "List Attachments": { "main": [ [ { "node": "Loop Over Attachments", "type": "main", "index": 0 } ] ] },
+    "List Attachments": { "main": [ [ { "node": "Drive Configured?", "type": "main", "index": 0 } ] ] },
+    "Drive Configured?": { "main": [ [ { "node": "Loop Over Attachments", "type": "main", "index": 0 } ], [ { "node": "Attachments Done", "type": "main", "index": 0 } ] ] },
     "Loop Over Attachments": {
       "main": [
         [ { "node": "Attachments Done", "type": "main", "index": 0 } ],
@@ -497,11 +595,14 @@
     "AI Agent - Triage & Draft": { "main": [ [ { "node": "Route by Category/Priority", "type": "main", "index": 0 } ] ] },
     "Route by Category/Priority": {
       "main": [
-        [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Create CRM Ticket (urgent)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (LINE)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (Telegram)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (WhatsApp)", "type": "main", "index": 0 } ],
+        [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Create CRM Ticket (urgent)", "type": "main", "index": 0 }, { "node": "LINE Configured?", "type": "main", "index": 0 }, { "node": "Telegram Ops Configured?", "type": "main", "index": 0 }, { "node": "WhatsApp Ops Configured?", "type": "main", "index": 0 } ],
         [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 } ],
         [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Route Reply by Channel", "type": "main", "index": 0 } ]
       ]
     },
+    "LINE Configured?": { "main": [ [ { "node": "Notify Ops Team (LINE)", "type": "main", "index": 0 } ], [] ] },
+    "Telegram Ops Configured?": { "main": [ [ { "node": "Notify Ops Team (Telegram)", "type": "main", "index": 0 } ], [] ] },
+    "WhatsApp Ops Configured?": { "main": [ [ { "node": "Notify Ops Team (WhatsApp)", "type": "main", "index": 0 } ], [] ] },
     "Route Reply by Channel": {
       "main": [
         [ { "node": "Create Gmail Draft Reply", "type": "main", "index": 0 } ],
