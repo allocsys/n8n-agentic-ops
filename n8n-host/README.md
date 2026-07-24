@@ -29,15 +29,18 @@ Clicking this:
 ## One remaining manual step
 
 Render has no way to know a service's own public URL *before* it's
-deployed, so `render.yaml` ships with three placeholder env vars
-(`N8N_HOST`, `N8N_EDITOR_BASE_URL`, `WEBHOOK_URL`). After the first deploy
-finishes:
+deployed, and the CRM Worker doesn't exist until you deploy it
+separately, so `render.yaml` ships with four placeholder env vars
+(`N8N_HOST`, `N8N_EDITOR_BASE_URL`, `WEBHOOK_URL`, `CRM_WORKER_BASE_URL`).
+After the first deploy finishes:
 
 1. Copy the `https://your-service.onrender.com` URL Render gives you.
-2. In the Render dashboard -> your service -> Environment, replace the three
+2. In the Render dashboard -> your service -> Environment, replace the
    `REPLACE_WITH_...` placeholders: `N8N_HOST` gets just the hostname
    (`your-service.onrender.com`), `N8N_EDITOR_BASE_URL` and `WEBHOOK_URL`
-   get the full URL (`https://your-service.onrender.com`).
+   get the full URL (`https://your-service.onrender.com`), and
+   `CRM_WORKER_BASE_URL` gets your deployed Worker's `*.workers.dev` URL
+   (see `crm-worker/README.md` -- deploy that first if you haven't).
 3. Save -- Render redeploys automatically with the real values, and OAuth
    redirect URIs (Gmail/Drive/Sheets "Connect" buttons in Phase 2) will
    resolve correctly.
