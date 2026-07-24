@@ -29,12 +29,13 @@ services:
       # for every web service with no setup needed. See n8n-host/Dockerfile.
       #
       # Points workflow.json's CRM nodes ($env.CRM_WORKER_BASE_URL) at your
-      # deployed CRM Worker. Same reason as the three placeholders above --
-      # the Worker doesn't exist yet at blueprint-apply time -- so fill this
-      # in after deploying it via crm-worker/README.md's "Deploy to
-      # Cloudflare Workers" button. This must be a real container env var
-      # (not n8n's in-app Settings -> Variables) since the workflow reads
-      # it via $env, not $vars.
+      # deployed CRM Worker. Unlike N8N_HOST/etc above, this one still needs
+      # a manual paste: it's a Cloudflare Workers URL, a different platform
+      # entirely, so there's no Render-injected value to derive it from.
+      # Fill it in after deploying the Worker via crm-worker/README.md's
+      # "Deploy to Cloudflare Workers" button. Must be a real container env
+      # var (not n8n's in-app Settings -> Variables) since the workflow
+      # reads it via $env, not $vars.
       - key: CRM_WORKER_BASE_URL
         value: REPLACE_WITH_YOUR_CRM_WORKER_URL
     disk:
