@@ -1,32 +1,32 @@
-## This file exists ONLY to stop Cloudflare's dashboard "Git integration"
-## (Workers Builds) from mis-detecting this repo.
+## Single source of truth for this Worker's config -- lives at the repo
+## root on purpose, not in crm-worker/.
 ##
-## What was happening without it: when Cloudflare builds straight from the
-## repo root and finds no wrangler config there, it falls back to guessing
-## a project type. It saw `docs/` (used for GitHub Pages) and one obvious
-## asset folder, decided "static site," and deployed a brand-new Worker
-## that just serves docs/index.html -- a duplicate of the GitHub Pages
-## page, under a different Workers subdomain, with the real CRM backend
-## never deployed.
+## Why: Cloudflare's dashboard Git integration (Workers Builds) builds from
+## the repo root by default. If there's no config there, it guesses a
+## project type from what it finds -- it once saw docs/ (used for GitHub
+## Pages) and deployed a throwaway static-site Worker serving
+## docs/index.html instead of the real CRM backend. Putting the real
+## config where it looks first removes the guesswork entirely.
 ##
-## Fix: give the root a real config pointing at the actual Worker, so
-## there's nothing left to guess. `main` is resolved relative to *this*
-## file, so it points into crm-worker/.
+## `main` is resolved relative to *this* file, so it points into crm-worker/.
 ##
-## This mirrors crm-worker/wrangler.toml on purpose -- same Worker `name`
-## and same D1 `database_name`, so builds triggered from either path
-## update the SAME Worker/database rather than creating a second one.
-## If you change name/bindings in crm-worker/wrangler.toml, update this
-## file to match.
-##
-## crm-worker/wrangler.toml stays put too -- it's what local dev
-## (`cd crm-worker && npm run dev`) and the GitHub Actions deploy workflow
-## (.github/workflows/deploy-crm-worker.yml) use directly.
+## Everything else points AT this file instead of keeping its own copy:
+## - Local dev (`crm-worker/package.json` scripts) passes `-c ../wrangler.toml`
+## - CI (`.github/workflows/deploy-crm-worker.yml`) passes `-c ../wrangler.toml`
+## - The Cloudflare dashboard finds it automatically at the root, no
+##   "root directory" override needed
+## There is deliberately no wrangler.toml inside crm-worker/ anymore --
+## one file, nothing to keep in sync.
 
 name = "n8n-crm-worker"
 main = "crm-worker/src/index.js"
 compatibility_date = "2026-07-23"
 
+# No database_id set on purpose: Wrangler auto-provisions a new D1 database
+# named "n8n-crm-worker-db" the first time this Worker is deployed (works
+# from `wrangler deploy` and from the Cloudflare dashboard's Git integration
+# too). See:
+# https://developers.cloudflare.com/workers/wrangler/configuration/#automatic-provisioning
 [[d1_databases]]
 binding = "DB"
 database_name = "n8n-crm-worker-db"
