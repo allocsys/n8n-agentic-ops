@@ -1,0 +1,54 @@
+name: Generate crm-worker lockfile
+
+# Manual, one-off maintenance workflow: runs `npm install` inside GitHub
+# Actions (which has network access, unlike the sandbox this repo has been
+# edited from) to generate crm-worker/package-lock.json, then commits it
+# back to the branch. Once a lockfile exists, ci.yml's "Install
+# dependencies" step should be switched from `npm install` to `npm ci`
+# with actions/setup-node's built-in lockfile-keyed cache instead of the
+# manual package.json-keyed cache it uses today.
+#
+# Run it from the Actions tab -> "Generate crm-worker lockfile" -> Run
+# workflow. Safe to re-run any time package.json's dependencies change.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to generate the lockfile on and push to"
+        required: false
+        default: main
+
+permissions:
+  contents: write
+
+jobs:
+  generate-lockfile:
+    name: npm install & commit package-lock.json
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crm-worker
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm install (generates package-lock.json)
+        run: npm install
+
+      - name: Commit and push lockfile if changed
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json unchanged, nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore(crm-worker): generate/update package-lock.json [skip ci]"
+          git push origin HEAD:${{ github.event.inputs.branch }}
