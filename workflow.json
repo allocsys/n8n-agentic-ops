@@ -1,5 +1,5 @@
 {
-  "name": "Agentic Email Triage & CRM Ops (Gmail → AI Agent → Sheets/CRM/LINE/Drive)",
+  "name": "Agentic Multi-Channel Triage & CRM Ops (Gmail/Telegram/WhatsApp → Multi-Provider AI Agent → Sheets/CRM/LINE/Telegram/WhatsApp/Drive)",
   "nodes": [
     {
       "id": "trigger-gmail",
@@ -16,6 +16,24 @@
       "credentials": { "gmailOAuth2": { "id": "REPLACE_ME", "name": "Gmail (support inbox)" } }
     },
     {
+      "id": "trigger-telegram",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [ -1200, 560 ],
+      "parameters": { "updates": [ "message" ] },
+      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Telegram (support bot)" } }
+    },
+    {
+      "id": "trigger-whatsapp",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [ -1200, 760 ],
+      "parameters": { "updates": [ "messages" ] },
+      "credentials": { "whatsAppTriggerApi": { "id": "REPLACE_ME", "name": "WhatsApp (support number)" } }
+    },
+    {
       "id": "extract-fields",
       "name": "Extract Email Fields",
       "type": "n8n-nodes-base.set",
@@ -29,10 +47,65 @@
             { "name": "subject", "type": "string", "value": "={{ $json.subject }}" },
             { "name": "body", "type": "string", "value": "={{ $json.text }}" },
             { "name": "receivedAt", "type": "string", "value": "={{ $json.date }}" },
-            { "name": "messageId", "type": "string", "value": "={{ $json.id }}" }
+            { "name": "messageId", "type": "string", "value": "={{ $json.id }}" },
+            { "name": "channel", "type": "string", "value": "email" },
+            { "name": "replyTarget", "type": "string", "value": "={{ $json.from.value[0].address }}" }
           ]
         }
       }
+    },
+    {
+      "id": "extract-telegram",
+      "name": "Extract Telegram Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ -960, 560 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "from", "type": "string", "value": "={{ $json.message.from.username ? '@' + $json.message.from.username : String($json.message.from.id) }}" },
+            { "name": "subject", "type": "string", "value": "={{ 'Telegram message from ' + ($json.message.from.first_name || $json.message.from.username || 'user') }}" },
+            { "name": "body", "type": "string", "value": "={{ $json.message.text }}" },
+            { "name": "receivedAt", "type": "string", "value": "={{ new Date($json.message.date * 1000).toISOString() }}" },
+            { "name": "messageId", "type": "string", "value": "={{ String($json.message.message_id) }}" },
+            { "name": "channel", "type": "string", "value": "telegram" },
+            { "name": "replyTarget", "type": "string", "value": "={{ String($json.message.chat.id) }}" }
+          ]
+        }
+      },
+      "notes": "Maps the Telegram Bot API 'message' update shape. The bot must be added to the chat with permission to read messages."
+    },
+    {
+      "id": "extract-whatsapp",
+      "name": "Extract WhatsApp Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ -960, 760 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "from", "type": "string", "value": "={{ $json.messages[0].from }}" },
+            { "name": "subject", "type": "string", "value": "WhatsApp message" },
+            { "name": "body", "type": "string", "value": "={{ $json.messages[0].text?.body || '' }}" },
+            { "name": "receivedAt", "type": "string", "value": "={{ new Date(Number($json.messages[0].timestamp) * 1000).toISOString() }}" },
+            { "name": "messageId", "type": "string", "value": "={{ $json.messages[0].id }}" },
+            { "name": "channel", "type": "string", "value": "whatsapp" },
+            { "name": "replyTarget", "type": "string", "value": "={{ $json.messages[0].from }}" }
+          ]
+        }
+      },
+      "notes": "Maps the WhatsApp Business Cloud API webhook shape (messages[0]). Exact field paths depend on the n8n WhatsApp Trigger node version — not yet verified against a live webhook payload, check before going live."
+    },
+    {
+      "id": "normalize-inbound",
+      "name": "Normalized Inbound",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ -820, 0 ],
+      "parameters": {},
+      "notes": "Common junction for all three inbound channels. Downstream nodes reference $('Normalized Inbound') instead of a channel-specific node, so the same reference resolves no matter which channel triggered this execution."
     },
     {
       "id": "list-attachments",
@@ -42,7 +115,7 @@
       "position": [ -960, 200 ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Gmail Trigger puts each attachment on its own binary key: attachment_0, attachment_1, ...\n// Fan out one n8n item per attachment so the loop below can upload them individually.\nconst results = [];\nfor (const item of $input.all()) {\n  const binaryKeys = Object.keys(item.binary || {}).filter((k) => k.startsWith('attachment_'));\n  for (const key of binaryKeys) {\n    results.push({\n      json: {\n        messageId: item.json.id,\n        subject: item.json.subject,\n        fileName: (item.binary[key] && item.binary[key].fileName) || key\n      },\n      binary: { data: item.binary[key] }\n    });\n  }\n}\nreturn results;"
+        "jsCode": "// Gmail Trigger puts each attachment on its own binary key: attachment_0, attachment_1, ...\n// Fan out one n8n item per attachment so the loop below can upload them individually.\n// (Gmail-only for now — Telegram/WhatsApp media attachments are not yet wired into this branch.)\nconst results = [];\nfor (const item of $input.all()) {\n  const binaryKeys = Object.keys(item.binary || {}).filter((k) => k.startsWith('attachment_'));\n  for (const key of binaryKeys) {\n    results.push({\n      json: {\n        messageId: item.json.id,\n        subject: item.json.subject,\n        fileName: (item.binary[key] && item.binary[key].fileName) || key\n      },\n      binary: { data: item.binary[key] }\n    });\n  }\n}\nreturn results;"
       }
     },
     {
@@ -112,19 +185,40 @@
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
-      "position": [ -900, 480 ],
+      "position": [ -900, 260 ],
       "parameters": { "model": "gpt-4o-mini", "options": { "temperature": 0.2 } },
-      "credentials": { "openAiApi": { "id": "REPLACE_ME", "name": "OpenAI" } }
+      "credentials": { "openAiApi": { "id": "REPLACE_ME", "name": "OpenAI" } },
+      "notes": "Primary model. Tried first."
+    },
+    {
+      "id": "lm-chat-gemini",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [ -900, 330 ],
+      "parameters": { "modelName": "models/gemini-1.5-flash", "options": { "temperature": 0.2 } },
+      "credentials": { "googlePalmApi": { "id": "REPLACE_ME", "name": "Google Gemini" } },
+      "notes": "Fallback #1, used automatically if the OpenAI model errors or is rate-limited. Credential type name may differ slightly by n8n version — check the node's credential picker."
+    },
+    {
+      "id": "lm-chat-claude",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [ -900, 400 ],
+      "parameters": { "model": "claude-3-5-sonnet-latest", "options": { "temperature": 0.2 } },
+      "credentials": { "anthropicApi": { "id": "REPLACE_ME", "name": "Anthropic" } },
+      "notes": "Fallback #2, used only if both OpenAI and Gemini fail. '-latest' is an Anthropic alias for the newest snapshot; pin to a dated model name in production for reproducibility."
     },
     {
       "id": "memory-buffer",
       "name": "Conversation Memory (per sender)",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [ -760, 480 ],
+      "position": [ -760, 260 ],
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Extract Email Fields').item.json.from }}",
+        "sessionKey": "={{ $('Normalized Inbound').item.json.from }}",
         "contextWindowLength": 10
       }
     },
@@ -133,7 +227,7 @@
       "name": "Company KB Search (RAG tool)",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.1,
-      "position": [ -620, 480 ],
+      "position": [ -620, 260 ],
       "parameters": {
         "mode": "retrieve-as-tool",
         "qdrantCollection": { "value": "company-kb", "mode": "list" },
@@ -148,7 +242,7 @@
       "name": "Embeddings (OpenAI)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
-      "position": [ -620, 640 ],
+      "position": [ -620, 420 ],
       "parameters": { "model": "text-embedding-3-small" },
       "credentials": { "openAiApi": { "id": "REPLACE_ME", "name": "OpenAI" } }
     },
@@ -157,7 +251,7 @@
       "name": "CRM Lookup (tool)",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [ -480, 480 ],
+      "position": [ -480, 260 ],
       "parameters": {
         "toolDescription": "Look up an existing CRM contact/deal by email address before drafting a reply, so the agent knows account history and open tickets.",
         "method": "GET",
@@ -176,7 +270,7 @@
       "name": "Structured Output Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
-      "position": [ -340, 640 ],
+      "position": [ -340, 420 ],
       "parameters": {
         "jsonSchemaExample": "{\n  \"category\": \"billing | technical | sales | complaint | spam\",\n  \"priority\": \"urgent | standard\",\n  \"summary\": \"one-sentence summary for the ops log\",\n  \"suggested_reply\": \"a drafted reply in the customer's language, grounded in KB/CRM lookups, or empty string if priority is urgent and a human should write it\",\n  \"needs_human\": true\n}"
       }
@@ -189,12 +283,13 @@
       "position": [ -700, 0 ],
       "parameters": {
         "promptType": "define",
-        "text": "={{ 'New inbound email.\\nFrom: ' + $json.from + '\\nSubject: ' + $json.subject + '\\nBody:\\n' + $json.body }}",
+        "text": "={{ 'New inbound message (channel: ' + $json.channel + ').\\nFrom: ' + $json.from + '\\nSubject: ' + $json.subject + '\\nBody:\\n' + $json.body }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "You are the triage agent for a services company's shared inbox. For every email: (1) classify category and priority, (2) use search_company_kb for any factual/policy question before answering, (3) use the CRM lookup tool to check if the sender is an existing customer and whether they have open tickets, (4) if priority is 'urgent' (angry customer, payment failure, security concern, or explicit escalation request) do NOT draft a reply yourself — set needs_human=true and leave suggested_reply empty so a person handles it, (5) otherwise draft a concise, polite reply in the same language as the incoming email, grounded only in what the KB/CRM tools returned — never invent policy details. Always return the structured JSON schema exactly."
+          "systemMessage": "You are the triage agent for a services company's shared inbox, which now receives messages from email, Telegram, and WhatsApp. For every message: (1) classify category and priority, (2) use search_company_kb for any factual/policy question before answering, (3) use the CRM lookup tool to check if the sender is an existing customer and whether they have open tickets, (4) if priority is 'urgent' (angry customer, payment failure, security concern, or explicit escalation request) do NOT draft a reply yourself — set needs_human=true and leave suggested_reply empty so a person handles it, (5) otherwise draft a concise, polite reply in the same language as the incoming message, matching the tone/length appropriate to the channel (email can be longer; Telegram/WhatsApp replies should be short and conversational), grounded only in what the KB/CRM tools returned — never invent policy details. Always return the structured JSON schema exactly."
         }
-      }
+      },
+      "notes": "Language model input has 3 chat models connected (OpenAI → Gemini → Claude); n8n tries them in that order and automatically fails over on error/rate-limit."
     },
     {
       "id": "route-priority",
@@ -214,6 +309,24 @@
       }
     },
     {
+      "id": "route-reply-channel",
+      "name": "Route Reply by Channel",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [ -60, 40 ],
+      "parameters": {
+        "rules": {
+          "values": [
+            { "outputKey": "email", "conditions": { "conditions": [ { "leftValue": "={{ $('Normalized Inbound').item.json.channel }}", "rightValue": "email", "operator": { "type": "string", "operation": "equals" } } ] } },
+            { "outputKey": "telegram", "conditions": { "conditions": [ { "leftValue": "={{ $('Normalized Inbound').item.json.channel }}", "rightValue": "telegram", "operator": { "type": "string", "operation": "equals" } } ] } },
+            { "outputKey": "whatsapp", "conditions": { "conditions": [ { "leftValue": "={{ $('Normalized Inbound').item.json.channel }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } } ] } }
+          ]
+        },
+        "options": { "fallbackOutput": "email" }
+      },
+      "notes": "Only reached for standard-priority messages (urgent ones skip drafting entirely). Sends the AI-drafted reply back on whichever channel the message came in on."
+    },
+    {
       "id": "log-sheet",
       "name": "Log to Ops Sheet",
       "type": "n8n-nodes-base.googleSheets",
@@ -227,8 +340,9 @@
           "mappingMode": "defineBelow",
           "value": {
             "timestamp": "={{ $now.toISO() }}",
-            "from": "={{ $('Extract Email Fields').item.json.from }}",
-            "subject": "={{ $('Extract Email Fields').item.json.subject }}",
+            "channel": "={{ $('Normalized Inbound').item.json.channel }}",
+            "from": "={{ $('Normalized Inbound').item.json.from }}",
+            "subject": "={{ $('Normalized Inbound').item.json.subject }}",
             "category": "={{ $json.output.category }}",
             "priority": "={{ $json.output.priority }}",
             "summary": "={{ $json.output.summary }}",
@@ -236,7 +350,7 @@
           }
         }
       },
-      "notes": "Attachment links are NOT joined in here — they land in the separate 'Attachments' sheet tab (see Log Attachment to Sheet), correlated by messageId. Merging them into this row would require synchronizing two branches that run at different speeds (one HTTP call vs. N looped uploads); logging them separately is simpler and doesn't block/slow this row on attachment upload success.",
+      "notes": "Attachment links are NOT joined in here — they land in the separate 'Attachments' sheet tab (Gmail only, see Log Attachment to Sheet), correlated by messageId.",
       "credentials": { "googleSheetsOAuth2Api": { "id": "REPLACE_ME", "name": "Google Sheets" } }
     },
     {
@@ -244,16 +358,44 @@
       "name": "Create Gmail Draft Reply",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [ -160, 40 ],
+      "position": [ 80, -40 ],
       "parameters": {
         "resource": "draft",
         "operation": "create",
-        "subject": "={{ 'Re: ' + $('Extract Email Fields').item.json.subject }}",
+        "subject": "={{ 'Re: ' + $('Normalized Inbound').item.json.subject }}",
         "emailType": "text",
         "message": "={{ $json.output.suggested_reply }}",
-        "options": { "threadId": "={{ $('Extract Email Fields').item.json.messageId }}" }
+        "options": { "threadId": "={{ $('Normalized Inbound').item.json.messageId }}" }
       },
       "credentials": { "gmailOAuth2": { "id": "REPLACE_ME", "name": "Gmail (support inbox)" } }
+    },
+    {
+      "id": "telegram-reply",
+      "name": "Send Telegram Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [ 80, 120 ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Normalized Inbound').item.json.replyTarget }}",
+        "text": "={{ $json.output.suggested_reply }}"
+      },
+      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Telegram (support bot)" } }
+    },
+    {
+      "id": "whatsapp-reply",
+      "name": "Send WhatsApp Reply",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [ 80, 220 ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "recipientPhoneNumber": "={{ $('Normalized Inbound').item.json.replyTarget }}",
+        "textBody": "={{ $json.output.suggested_reply }}"
+      },
+      "credentials": { "whatsAppApi": { "id": "REPLACE_ME", "name": "WhatsApp (support number)" } }
     },
     {
       "id": "crm-ticket",
@@ -267,10 +409,11 @@
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "email", "value": "={{ $('Extract Email Fields').item.json.from }}" },
-            { "name": "subject", "value": "={{ $('Extract Email Fields').item.json.subject }}" },
+            { "name": "email", "value": "={{ $('Normalized Inbound').item.json.from }}" },
+            { "name": "subject", "value": "={{ $('Normalized Inbound').item.json.subject }}" },
             { "name": "summary", "value": "={{ $json.output.summary }}" },
-            { "name": "priority", "value": "high" }
+            { "name": "priority", "value": "high" },
+            { "name": "channel", "value": "={{ $('Normalized Inbound').item.json.channel }}" }
           ]
         },
         "authentication": "genericCredentialType",
@@ -283,7 +426,7 @@
       "name": "Notify Ops Team (LINE)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [ -160, 380 ],
+      "position": [ -160, 340 ],
       "parameters": {
         "method": "POST",
         "url": "https://api.line.me/v2/bot/message/push",
@@ -291,16 +434,49 @@
         "headerParameters": { "parameters": [ { "name": "Content-Type", "value": "application/json" } ] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ to: $env.LINE_OPS_GROUP_ID, messages: [ { type: 'text', text: 'Urgent email from ' + $('Extract Email Fields').item.json.from + ': ' + $json.output.summary } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ to: $env.LINE_OPS_GROUP_ID, messages: [ { type: 'text', text: 'Urgent ' + $('Normalized Inbound').item.json.channel + ' message from ' + $('Normalized Inbound').item.json.from + ': ' + $json.output.summary } ] }) }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth"
       },
       "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "LINE Channel Access Token" } }
+    },
+    {
+      "id": "telegram-notify",
+      "name": "Notify Ops Team (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [ -160, 460 ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $env.TELEGRAM_OPS_CHAT_ID }}",
+        "text": "={{ 'Urgent ' + $('Normalized Inbound').item.json.channel + ' message from ' + $('Normalized Inbound').item.json.from + ': ' + $json.output.summary }}"
+      },
+      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Telegram (support bot)" } }
+    },
+    {
+      "id": "whatsapp-notify",
+      "name": "Notify Ops Team (WhatsApp)",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [ -160, 580 ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "recipientPhoneNumber": "={{ $env.WHATSAPP_OPS_NUMBER }}",
+        "textBody": "={{ 'Urgent ' + $('Normalized Inbound').item.json.channel + ' message from ' + $('Normalized Inbound').item.json.from + ': ' + $json.output.summary }}"
+      },
+      "credentials": { "whatsAppApi": { "id": "REPLACE_ME", "name": "WhatsApp (support number)" } }
     }
   ],
   "connections": {
     "Gmail Trigger": { "main": [ [ { "node": "Extract Email Fields", "type": "main", "index": 0 }, { "node": "List Attachments", "type": "main", "index": 0 } ] ] },
-    "Extract Email Fields": { "main": [ [ { "node": "AI Agent - Triage & Draft", "type": "main", "index": 0 } ] ] },
+    "Telegram Trigger": { "main": [ [ { "node": "Extract Telegram Fields", "type": "main", "index": 0 } ] ] },
+    "WhatsApp Trigger": { "main": [ [ { "node": "Extract WhatsApp Fields", "type": "main", "index": 0 } ] ] },
+    "Extract Email Fields": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
+    "Extract Telegram Fields": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
+    "Extract WhatsApp Fields": { "main": [ [ { "node": "Normalized Inbound", "type": "main", "index": 0 } ] ] },
+    "Normalized Inbound": { "main": [ [ { "node": "AI Agent - Triage & Draft", "type": "main", "index": 0 } ] ] },
     "List Attachments": { "main": [ [ { "node": "Loop Over Attachments", "type": "main", "index": 0 } ] ] },
     "Loop Over Attachments": {
       "main": [
@@ -311,6 +487,8 @@
     "Upload Attachment to Drive": { "main": [ [ { "node": "Log Attachment to Sheet", "type": "main", "index": 0 } ] ] },
     "Log Attachment to Sheet": { "main": [ [ { "node": "Loop Over Attachments", "type": "main", "index": 0 } ] ] },
     "OpenAI Chat Model": { "ai_languageModel": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_languageModel", "index": 0 } ] ] },
+    "Google Gemini Chat Model": { "ai_languageModel": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_languageModel", "index": 0 } ] ] },
+    "Anthropic Chat Model": { "ai_languageModel": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_languageModel", "index": 0 } ] ] },
     "Conversation Memory (per sender)": { "ai_memory": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_memory", "index": 0 } ] ] },
     "Embeddings (OpenAI)": { "ai_embedding": [ [ { "node": "Company KB Search (RAG tool)", "type": "ai_embedding", "index": 0 } ] ] },
     "Company KB Search (RAG tool)": { "ai_tool": [ [ { "node": "AI Agent - Triage & Draft", "type": "ai_tool", "index": 0 } ] ] },
@@ -319,9 +497,16 @@
     "AI Agent - Triage & Draft": { "main": [ [ { "node": "Route by Category/Priority", "type": "main", "index": 0 } ] ] },
     "Route by Category/Priority": {
       "main": [
-        [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Create CRM Ticket (urgent)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (LINE)", "type": "main", "index": 0 } ],
+        [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Create CRM Ticket (urgent)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (LINE)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (Telegram)", "type": "main", "index": 0 }, { "node": "Notify Ops Team (WhatsApp)", "type": "main", "index": 0 } ],
         [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 } ],
-        [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Create Gmail Draft Reply", "type": "main", "index": 0 } ]
+        [ { "node": "Log to Ops Sheet", "type": "main", "index": 0 }, { "node": "Route Reply by Channel", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Route Reply by Channel": {
+      "main": [
+        [ { "node": "Create Gmail Draft Reply", "type": "main", "index": 0 } ],
+        [ { "node": "Send Telegram Reply", "type": "main", "index": 0 } ],
+        [ { "node": "Send WhatsApp Reply", "type": "main", "index": 0 } ]
       ]
     }
   },
