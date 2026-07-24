@@ -282,6 +282,13 @@
     svg.flow{width:640px; max-width:none;}
     .panel-scroll-hint{display:block; top:16px; right:16px;}
 
+    .flow-desktop{display:none;}
+    .mobile-flow{display:block;}
+    .mobile-flow .panel-inner{overflow-x:visible; padding:22px 14px 14px;}
+    .flow-node{padding:12px 14px;}
+    .flow-node-sub{font-size:10px;}
+    .flow-side-notes{border-top:1px solid var(--line-soft); padding-top:16px;}
+
     .code{flex-direction:column; align-items:flex-start; gap:8px;}
     .code span{width:100%;}
 
@@ -423,6 +430,77 @@
           <circle r="4" fill="var(--cyan)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.6s"><mpath href="#p6" xlink:href="#p6"/></animateMotion></circle>
           <circle r="4" fill="var(--text-faint)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="3.1s"><mpath href="#p7" xlink:href="#p7"/></animateMotion></circle>
         </svg>
+        <div class="legend">
+          <span><i style="background:var(--violet)"></i> normalize / agent</span>
+          <span><i style="background:var(--amber)"></i> urgent → CRM ticket, ops alert optional</span>
+          <span><i style="background:var(--cyan)"></i> standard → drafted reply, same channel</span>
+          <span><i style="background:var(--text-faint)"></i> spam → sheet log only</span>
+          <span><i style="border:1px solid var(--text-dim); background:transparent;"></i> solid border = required</span>
+          <span><i style="border:1px dashed var(--text-faint); background:transparent;"></i> dashed border = optional, env-gated</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel reveal mobile-flow">
+      <div class="panel-inner">
+        <span class="panel-label">full pipeline · solid = required, dashed = optional / env-gated</span>
+        <div class="flow-stack">
+          <div class="flow-group">
+            <div class="flow-node">
+              <div class="flow-node-title">Gmail</div>
+              <div class="flow-node-sub">trigger + attach. · required</div>
+            </div>
+            <div class="flow-node optional">
+              <div class="flow-node-title">Telegram</div>
+              <div class="flow-node-sub">bot trigger · optional</div>
+            </div>
+            <div class="flow-node optional">
+              <div class="flow-node-title">WhatsApp</div>
+              <div class="flow-node-sub">cloud API · optional</div>
+            </div>
+          </div>
+
+          <div class="flow-connector"><div class="flow-dot"></div></div>
+
+          <div class="flow-node merge">
+            <div class="flow-node-title">merge</div>
+          </div>
+
+          <div class="flow-connector"><div class="flow-dot"></div></div>
+
+          <div class="flow-node agent">
+            <div class="flow-node-title">AI Agent</div>
+            <div class="flow-node-sub">LLM: OpenAI (default)<br>+ Gemini/Claude opt-in (off)<br>Memory: per sender<br>Tools: RAG · CRM lookup<br>→ structured JSON output</div>
+          </div>
+
+          <div class="flow-connector"><div class="flow-dot"></div></div>
+
+          <div class="flow-group outcomes">
+            <div class="flow-node outcome-urgent">
+              <div class="flow-node-title">Urgent</div>
+              <div class="flow-node-sub">CRM ticket + sheet log</div>
+            </div>
+            <div class="flow-node outcome-standard">
+              <div class="flow-node-title">Standard</div>
+              <div class="flow-node-sub">reply drafted, same channel</div>
+            </div>
+            <div class="flow-node outcome-spam">
+              <div class="flow-node-title">Spam</div>
+              <div class="flow-node-sub">logged only</div>
+            </div>
+          </div>
+
+          <div class="flow-side-notes">
+            <div class="flow-node note">
+              <div class="flow-node-title">Attachments</div>
+              <div class="flow-node-sub">Gmail only, 0–N per message → Drive upload (optional) → own sheet tab, by messageId — never blocks the main row</div>
+            </div>
+            <div class="flow-node note">
+              <div class="flow-node-title">Ops alerts</div>
+              <div class="flow-node-sub">LINE · Telegram · WhatsApp, each gated on its own env var — unset → node never reached, fires only on Urgent</div>
+            </div>
+          </div>
+        </div>
         <div class="legend">
           <span><i style="background:var(--violet)"></i> normalize / agent</span>
           <span><i style="background:var(--amber)"></i> urgent → CRM ticket, ops alert optional</span>
