@@ -12,6 +12,7 @@ reasoning behind the design, not a specific client's production system.
 ```mermaid
 flowchart LR
     A[Gmail Trigger] --> B[Extract Email Fields]
+    A --> I[Upload Attachment\nto Drive]
     B --> C[AI Agent\nTriage & Draft]
     LLM[OpenAI Chat Model] -.model.-> C
     MEM[(Memory\nper sender)] -.context.-> C
@@ -25,6 +26,7 @@ flowchart LR
     D -- standard --> H[Create Gmail\nDraft Reply]
     D -- standard --> G
     D -- spam --> G
+    I -.attachment link.-> G
 ```
 
 ## What it does
@@ -32,6 +34,8 @@ flowchart LR
 ```
 Gmail (new email)
    → extract sender/subject/body
+   → (in parallel) any attachment is uploaded to a Drive folder;
+     the resulting webViewLink is carried through to the Sheet log
    → AI Agent (LLM + memory + RAG tool + CRM tool)
        - classifies category (billing / technical / sales / complaint / spam)
        - classifies priority (urgent / standard)
@@ -75,7 +79,7 @@ Gmail (new email)
 | Memory | LangChain buffer-window memory, keyed per sender |
 | Retrieval (RAG) | Qdrant vector store + OpenAI embeddings (`text-embedding-3-small`) |
 | Structured output | LangChain JSON-schema output parser |
-| Integrations | Gmail API, Google Sheets API, generic REST (CRM), LINE Messaging API |
+| Integrations | Gmail API, Google Drive API, Google Sheets API, generic REST (CRM), LINE Messaging API |
 | Safety pattern | Prompt-level escalation carve-out (no auto-send on urgent/ambiguous cases) |
 
 ## Files
@@ -97,6 +101,8 @@ Gmail (new email)
   (`@n8n/n8n-nodes-langchain`)
 - An OpenAI (or swap for any other LLM) credential
 - Gmail OAuth2 credential with send + draft scopes
+- Google Drive OAuth2 credential (used to upload email attachments; set
+  `folderId` in the "Upload Attachment to Drive" node to a real Drive folder)
 - Google Sheets OAuth2 credential
 - A vector store (Qdrant used here; swappable for Pinecone/Supabase/etc.)
 - Generic HTTP header auth credentials for your CRM and LINE channel token
