@@ -434,13 +434,34 @@
             <text class="node-sub" x="905" y="488" text-anchor="middle">fires only on Urgent</text>
           </g>
 
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0s"><mpath href="#p1" xlink:href="#p1"/></animateMotion></circle>
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0.5s"><mpath href="#p2" xlink:href="#p2"/></animateMotion></circle>
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="1s"><mpath href="#p3" xlink:href="#p3"/></animateMotion></circle>
-          <circle r="4" fill="var(--violet)"><animateMotion dur="2s" repeatCount="indefinite" begin="1.6s"><mpath href="#p4" xlink:href="#p4"/></animateMotion></circle>
-          <circle r="4" fill="var(--amber)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.1s"><mpath href="#p5" xlink:href="#p5"/></animateMotion></circle>
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.6s"><mpath href="#p6" xlink:href="#p6"/></animateMotion></circle>
-          <circle r="4" fill="var(--text-faint)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="3.1s"><mpath href="#p7" xlink:href="#p7"/></animateMotion></circle>
+          <circle r="4" fill="var(--cyan)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.4;1" keyPoints="0;1;1"><mpath href="#p1" xlink:href="#p1"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.4;0.4;1" values="1;1;0;0"/>
+          </circle>
+          <circle r="4" fill="var(--cyan)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.0625;0.4625;1" keyPoints="0;0;1;1"><mpath href="#p2" xlink:href="#p2"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.0625;0.0625;0.4625;0.4625;1" values="0;0;1;1;0;0"/>
+          </circle>
+          <circle r="4" fill="var(--cyan)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.125;0.525;1" keyPoints="0;0;1;1"><mpath href="#p3" xlink:href="#p3"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.125;0.125;0.525;0.525;1" values="0;0;1;1;0;0"/>
+          </circle>
+          <circle r="4" fill="var(--violet)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.2;0.45;1" keyPoints="0;0;1;1"><mpath href="#p4" xlink:href="#p4"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.2;0.2;0.45;0.45;1" values="0;0;1;1;0;0"/>
+          </circle>
+          <circle r="4" fill="var(--amber)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.2625;0.5875;1" keyPoints="0;0;1;1"><mpath href="#p5" xlink:href="#p5"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.2625;0.2625;0.5875;0.5875;1" values="0;0;1;1;0;0"/>
+          </circle>
+          <circle r="4" fill="var(--cyan)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.325;0.65;1" keyPoints="0;0;1;1"><mpath href="#p6" xlink:href="#p6"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.325;0.325;0.65;0.65;1" values="0;0;1;1;0;0"/>
+          </circle>
+          <circle r="4" fill="var(--text-faint)" opacity="0">
+            <animateMotion dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.3875;0.7125;1" keyPoints="0;0;1;1"><mpath href="#p7" xlink:href="#p7"/></animateMotion>
+            <animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.3875;0.3875;0.7125;0.7125;1" values="0;0;1;1;0;0"/>
+          </circle>
         </svg>
         <div class="legend">
           <span><i style="background:var(--violet)"></i> normalize / agent</span>
