@@ -224,9 +224,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [ -900, 330 ],
+      "disabled": true,
       "parameters": { "modelName": "models/gemini-1.5-flash", "options": { "temperature": 0.2 } },
       "credentials": { "googlePalmApi": { "id": "REPLACE_ME", "name": "Google Gemini" } },
-      "notes": "Fallback #1, used automatically if the OpenAI model errors or is rate-limited. Credential type name may differ slightly by n8n version — check the node's credential picker."
+      "notes": "Advanced/optional, OFF by default -- the default setup path is single-provider (OpenAI only, see SETUP.md). Re-enable this node and attach a real Google Gemini credential to add it as fallback #1 (tried automatically if OpenAI errors or is rate-limited). Credential type name may differ slightly by n8n version — check the node's credential picker."
     },
     {
       "id": "lm-chat-claude",
@@ -234,9 +235,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1,
       "position": [ -900, 400 ],
+      "disabled": true,
       "parameters": { "model": "claude-3-5-sonnet-latest", "options": { "temperature": 0.2 } },
       "credentials": { "anthropicApi": { "id": "REPLACE_ME", "name": "Anthropic" } },
-      "notes": "Fallback #2, used only if both OpenAI and Gemini fail. '-latest' is an Anthropic alias for the newest snapshot; pin to a dated model name in production for reproducibility."
+      "notes": "Advanced/optional, OFF by default, same reason as the Gemini node. Re-enable this node and attach a real Anthropic credential to add it as fallback #2 (tried only if both OpenAI and Gemini fail/are disabled). '-latest' is an Anthropic alias for the newest snapshot; pin to a dated model name in production for reproducibility."
     },
     {
       "id": "memory-buffer",
@@ -317,7 +319,7 @@
           "systemMessage": "You are the triage agent for a services company's shared inbox, which now receives messages from email, Telegram, and WhatsApp. For every message: (1) classify category and priority, (2) use search_company_kb for any factual/policy question before answering, (3) use the CRM lookup tool to check if the sender is an existing customer and whether they have open tickets, (4) if priority is 'urgent' (angry customer, payment failure, security concern, or explicit escalation request) do NOT draft a reply yourself — set needs_human=true and leave suggested_reply empty so a person handles it, (5) otherwise draft a concise, polite reply in the same language as the incoming message, matching the tone/length appropriate to the channel (email can be longer; Telegram/WhatsApp replies should be short and conversational), grounded only in what the KB/CRM tools returned — never invent policy details. Always return the structured JSON schema exactly."
         }
       },
-      "notes": "Language model input has 3 chat models connected (OpenAI → Gemini → Claude); n8n tries them in that order and automatically fails over on error/rate-limit."
+      "notes": "Default setup path is single-provider: only the OpenAI Chat Model is enabled, so the AI Agent just uses it directly. The Gemini and Claude chat model nodes are still wired in (same ai_languageModel connection, giving a 3-model fallback chain OpenAI → Gemini → Claude) but ship disabled -- re-enable them and attach real credentials for multi-provider failover. See SETUP.md."
     },
     {
       "id": "route-priority",
