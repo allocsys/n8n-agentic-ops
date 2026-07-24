@@ -142,8 +142,9 @@ each attachment gets its own row in an `Attachments` tab (`messageId`,
   80%, not auto-send responses to an angry customer or a payment failure.
 - **Structured output, not free text.** The agent is forced through a JSON
   schema (category/priority/summary/suggested_reply/needs_human) so
-  downstream nodes (Sheets, CRM, LINE) can route deterministically instead
-  of parsing prose.
+  downstream nodes (Sheets, CRM, and the Gmail/Telegram/WhatsApp reply and
+  LINE/Telegram/WhatsApp ops-alert nodes) can route deterministically
+  instead of parsing prose.
 - **One workflow, many integration surfaces.** Three inbound/reply
   channels (Gmail, Telegram, WhatsApp), Google Sheets (audit log), Google
   Drive (attachment uploads), a generic CRM ticket API, and ops-alert
