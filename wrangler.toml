@@ -12,7 +12,12 @@
 ##
 ## Everything else points AT this file instead of keeping its own copy:
 ## - Local dev (`crm-worker/package.json` scripts) passes `-c ../wrangler.toml`
-## - CI (`.github/workflows/deploy-crm-worker.yml`) passes `-c ../wrangler.toml`
+## - CI (`.github/workflows/ci.yml`) passes `-c ../wrangler.toml` too, but
+##   only for `wrangler deploy --dry-run` as a config-sanity check -- CI
+##   never deploys. Actual deploys are manual: the Cloudflare "Deploy to
+##   Workers" button in crm-worker/README.md, or importing this repo via
+##   the Cloudflare dashboard's Git integration (same one-click model
+##   n8n-host uses on Render).
 ## - The Cloudflare dashboard finds it automatically at the root, no
 ##   "root directory" override needed
 ## There is deliberately no wrangler.toml inside crm-worker/ anymore --
