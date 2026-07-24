@@ -62,9 +62,12 @@ Render -- find it in the dashboard under your service's Environment tab
 3. For Telegram/WhatsApp/LINE (not OAuth platforms -- see the main
    README's fallback-chain note), you'll still paste a bot token /
    business API credential by hand.
-4. Deploy the CRM Worker (`crm-worker/README.md`) if you haven't, and paste
-   its URL into the `CRM_WORKER_BASE_URL` variable here (Settings ->
-   Variables).
+4. Deploy the CRM Worker (`crm-worker/README.md`) if you haven't, then
+   paste its URL into `CRM_WORKER_BASE_URL` in the **Render dashboard**
+   (your n8n service -> Environment -- it's already listed there as a
+   placeholder from `render.yaml`, alongside `N8N_HOST` etc.). This has
+   to be a real container env var, not n8n's in-app Settings -> Variables,
+   since the workflow reads it via `$env`.
 
 ## Alternatives
 
