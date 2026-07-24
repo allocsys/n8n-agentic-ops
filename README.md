@@ -147,6 +147,9 @@ each attachment gets its own row in an `Attachments` tab (`messageId`,
   classification/escalation logic before wiring the workflow live.
 - `kb/` — sample knowledge-base documents used to demonstrate the RAG tool
   (`search_company_kb`). Swap these for a real company's docs in production.
+- `mock/` — zero-credential version of the workflow (`workflow.mock.json`)
+  plus sample trigger payloads, for demoing or offline-testing the logic
+  without any live accounts. See `mock/README.md`.
 
 ## Requirements to run
 
