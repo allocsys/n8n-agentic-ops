@@ -1,0 +1,11 @@
+{
+  "_comment": "Best-effort shape of a WhatsApp Business Cloud API webhook (messages[0]), trimmed to the fields Extract WhatsApp Fields reads. NOT yet verified against a live webhook -- see the note on the WhatsApp Trigger node in workflow.json. Use as pinData to test the real node wiring offline, without a live WhatsApp Business credential.",
+  "messages": [
+    {
+      "id": "wamid.sample0001",
+      "from": "15550001111",
+      "timestamp": "1753351200",
+      "text": { "body": "Win a free prize now, click this link!!!" }
+    }
+  ]
+}
