@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  crm-worker-test:
+    name: crm-worker · test & validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crm-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # crm-worker has no committed package-lock.json yet, so setup-node's
+      # built-in npm cache can't be used (it requires a lockfile to key
+      # on). Cache ~/.npm manually instead, keyed on package.json. Once a
+      # lockfile is committed, switch to setup-node's cache: npm option
+      # keyed on crm-worker/package-lock.json for a more precise cache.
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-crm-worker-${{ hashFiles('crm-worker/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-crm-worker-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Validate wrangler config (dry run, no deploy)
+        run: npx wrangler deploy --dry-run -c ../wrangler.toml
+
+  validate-workflow-json:
+    name: validate n8n workflow JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate workflow.json
+        run: node -e "JSON.parse(require('fs').readFileSync('workflow.json', 'utf8')); console.log('workflow.json OK')"
+
+      - name: Validate mock/workflow.mock.json
+        run: node -e "JSON.parse(require('fs').readFileSync('mock/workflow.mock.json', 'utf8')); console.log('mock/workflow.mock.json OK')"
+
+  n8n-host-docker-build:
+    name: n8n-host · docker build check (build only, no push)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build n8n-host image
+        uses: docker/build-push-action@v6
+        with:
+          context: n8n-host
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
