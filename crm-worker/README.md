@@ -5,6 +5,23 @@ for the `workflow.json` in this repo — a real, live HTTP API for the
 "CRM Lookup" tool and "Create CRM Ticket" node to call, instead of the
 `api.example-crm.com` placeholder.
 
+## Dashboard
+
+`GET /` serves a self-contained HTML dashboard (dark-themed, no build step,
+no JS framework) rendered server-side straight from the D1 tables: contact
+count, ticket count, open-ticket count, a priority breakdown, and full
+tables of recent tickets and contacts. Useful for eyeballing that the n8n
+workflow is actually landing real rows — no separate BI tool or DB client
+needed, just open the deployed URL in a browser.
+
+```
+https://n8n-crm-worker.<your-subdomain>.workers.dev/
+```
+
+Note: it's gated by the same `authOk` check as the API routes, so if you set
+a `CRM_TOKEN` secret, the dashboard will also require a `Bearer` header —
+you won't be able to just open it in a browser tab anymore.
+
 ## Endpoints
 
 - `GET /v1/contacts/lookup?email=...` — look up a contact by email.
