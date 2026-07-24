@@ -94,15 +94,6 @@ each attachment gets its own row in an `Attachments` tab (`messageId`,
 `subject`, `fileName`, `driveLink`), correlated back to the main log by
 `messageId`.
 
-**Why attachment links live in a separate sheet tab, not a column on the main
-log row:** the main row (Log to Ops Sheet) is written from a single AI Agent
-call, while the attachment branch runs a variable number of loop iterations
-(zero to many). Waiting for both branches to finish before writing one row
-would mean the ops log is only as fast as the slowest attachment upload, and
-any failed upload would block the whole row. Instead, each attachment gets
-its own row in an `Attachments` tab (`messageId`, `subject`, `fileName`,
-`driveLink`), correlated back to the main log by `messageId`.
-
 ## Why it's built this way
 
 - **Memory is per-sender, not global.** The conversation memory node keys on
@@ -130,12 +121,10 @@ its own row in an `Attachments` tab (`messageId`, `subject`, `fileName`,
 | Layer | Tool / Pattern |
 |---|---|
 | Orchestration | n8n (self-hosted), `@n8n/n8n-nodes-langchain` |
-| LLM | OpenAI `gpt-4o-mini` (swappable) |
+| LLM | OpenAI `gpt-4o-mini` → Gemini `gemini-1.5-flash` → Claude `claude-3-5-sonnet-latest` fallback chain |
 | Memory | LangChain buffer-window memory, keyed per sender |
 | Retrieval (RAG) | Qdrant vector store + OpenAI embeddings (`text-embedding-3-small`) |
 | Structured output | LangChain JSON-schema output parser |
-| LLM | OpenAI `gpt-4o-mini` → Gemini `gemini-1.5-flash` → Claude `claude-3-5-sonnet-latest` fallback chain |
-| Channels (inbound + outbound) | Gmail, Telegram Bot API, WhatsApp Business Cloud API |
 | Integrations | Gmail API, Telegram Bot API, WhatsApp Cloud API, Google Drive API, Google Sheets API, generic REST (CRM), LINE Messaging API |
 | Attachment handling | Code node fans out N attachments → SplitInBatches loop (1 at a time) → Drive upload → Sheets append (Gmail only) |
 | Safety pattern | Prompt-level escalation carve-out (no auto-send on urgent/ambiguous cases) |
