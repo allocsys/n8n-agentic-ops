@@ -414,8 +414,8 @@
     </div>
     <div class="grid2 reveal">
       <div class="card">
-        <h3>Fallback chain, not round-robin</h3>
-        <p>OpenAI → Gemini → Claude, tried in order. n8n is a static graph, so true load-balancing would need an external counter. Fallback-on-failure gets the reliability win without that infrastructure.</p>
+        <h3>Single provider by default, fallback as opt-in</h3>
+        <p>Ships wired to OpenAI (gpt-4o-mini) only — Gemini and Claude nodes are in the graph but shipped <code>disabled</code>, an advanced opt-in for anyone who wants a fallback chain. n8n is a static graph, so true load-balancing would need an external counter; enabling the extra nodes gets fallback-on-failure without that infrastructure.</p>
       </div>
       <div class="card">
         <h3>Per-sender memory</h3>
@@ -429,6 +429,10 @@
         <h3>Zero-credential mock mode</h3>
         <p>Every credentialed node has a mock twin using canned data — the real routing logic runs unmodified, so the decision-making is demonstrable before any account exists.</p>
       </div>
+      <div class="card">
+        <h3>Optional integrations, gated not required</h3>
+        <p>Drive uploads and the LINE/Telegram/WhatsApp ops alerts each sit behind their own "Configured?" IF node keyed off an env var — leave it unset and that branch is simply never reached. Telegram/WhatsApp inbound triggers ship <code>disabled</code> for the same reason. A Gmail-only setup needs none of these accounts.</p>
+      </div>
     </div>
   </section>
 
@@ -441,7 +445,7 @@
       <div class="table-wrap" style="background:var(--bg-panel-2); border-radius:10px; padding:6px 20px;">
         <table>
           <tr><th>Orchestration</th><td>n8n (cloud), @n8n/n8n-nodes-langchain</td></tr>
-          <tr><td>LLM</td><td>OpenAI gpt-4o-mini → Gemini 1.5-flash → Claude 3.5-sonnet, fallback chain</td></tr>
+          <tr><td>LLM</td><td>OpenAI gpt-4o-mini (default) — Gemini 1.5-flash / Claude 3.5-sonnet wired as opt-in fallback, shipped disabled</td></tr>
           <tr><td>Memory</td><td>LangChain buffer-window memory, keyed per sender</td></tr>
           <tr><td>Retrieval</td><td>Qdrant vector store + OpenAI text-embedding-3-small</td></tr>
           <tr><td>Integrations</td><td>Gmail, Telegram Bot API, WhatsApp Cloud API, Drive, Sheets, LINE, generic CRM REST</td></tr>
