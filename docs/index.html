@@ -266,7 +266,7 @@
     <div class="panel reveal">
       <div class="panel-inner">
         <span class="panel-label">live routing · loops every few seconds</span>
-        <svg class="flow" viewBox="0 0 1000 460" xmlns="http://www.w3.org/2000/svg">
+        <svg class="flow" viewBox="0 0 1000 460" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           <path id="p1" class="path-line" d="M150,90 C260,90 260,225 340,225"/>
           <path id="p2" class="path-line" d="M150,225 C260,225 260,225 340,225"/>
           <path id="p3" class="path-line" d="M150,360 C260,360 260,225 340,225"/>
@@ -319,13 +319,13 @@
             <text class="node-sub" x="895" y="372" text-anchor="middle">logged only</text>
           </g>
 
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0s"><mpath href="#p1"/></animateMotion></circle>
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0.5s"><mpath href="#p2"/></animateMotion></circle>
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="1s"><mpath href="#p3"/></animateMotion></circle>
-          <circle r="4" fill="var(--violet)"><animateMotion dur="2s" repeatCount="indefinite" begin="1.6s"><mpath href="#p4"/></animateMotion></circle>
-          <circle r="4" fill="var(--amber)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.1s"><mpath href="#p5"/></animateMotion></circle>
-          <circle r="4" fill="var(--cyan)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.6s"><mpath href="#p6"/></animateMotion></circle>
-          <circle r="4" fill="var(--text-faint)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="3.1s"><mpath href="#p7"/></animateMotion></circle>
+          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0s"><mpath href="#p1" xlink:href="#p1"/></animateMotion></circle>
+          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0.5s"><mpath href="#p2" xlink:href="#p2"/></animateMotion></circle>
+          <circle r="4" fill="var(--cyan)"><animateMotion dur="3.2s" repeatCount="indefinite" begin="1s"><mpath href="#p3" xlink:href="#p3"/></animateMotion></circle>
+          <circle r="4" fill="var(--violet)"><animateMotion dur="2s" repeatCount="indefinite" begin="1.6s"><mpath href="#p4" xlink:href="#p4"/></animateMotion></circle>
+          <circle r="4" fill="var(--amber)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.1s"><mpath href="#p5" xlink:href="#p5"/></animateMotion></circle>
+          <circle r="4" fill="var(--cyan)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="2.6s"><mpath href="#p6" xlink:href="#p6"/></animateMotion></circle>
+          <circle r="4" fill="var(--text-faint)"><animateMotion dur="2.6s" repeatCount="indefinite" begin="3.1s"><mpath href="#p7" xlink:href="#p7"/></animateMotion></circle>
         </svg>
         <div class="legend">
           <span><i style="background:var(--violet)"></i> normalize / agent</span>
