@@ -214,6 +214,12 @@
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     overflow-x:auto;
   }
+  .code span{overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;}
+  .panel-scroll-hint{
+    display:none;
+    font-family:var(--mono); font-size:10.5px; color:var(--text-faint);
+    position:absolute; top:14px; right:20px;
+  }
   .copy{
     font-family:var(--mono); font-size:11px; color:var(--text-faint);
     background:transparent; border:1px solid var(--line); border-radius:5px;
@@ -263,6 +269,10 @@
     .panel-inner{padding:22px 0 0; overflow-x:auto; -webkit-overflow-scrolling:touch;}
     .panel-label{left:16px;}
     svg.flow{width:640px; max-width:none;}
+    .panel-scroll-hint{display:block; top:16px; right:16px;}
+
+    .code{flex-direction:column; align-items:flex-start; gap:8px;}
+    .code span{width:100%;}
 
     .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
     table{min-width:480px;}
@@ -323,6 +333,7 @@
     <div class="panel reveal">
       <div class="panel-inner">
         <span class="panel-label">full pipeline · solid = required, dashed = optional / env-gated</span>
+        <span class="panel-scroll-hint">swipe to see full diagram →</span>
         <svg class="flow" viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           <path id="p1" class="path-line" d="M150,65 C260,65 260,185 340,185"/>
           <path id="p2" class="path-line path-optional" d="M150,185 C260,185 260,185 340,185"/>
