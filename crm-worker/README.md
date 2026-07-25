@@ -97,3 +97,22 @@ cd crm-worker
 npm run db:migrate:local
 npm run dev
 ```
+
+**If you deployed via the "Deploy to Cloudflare Workers" button first:** the
+`db:migrate:local` / `db:migrate:remote` scripts above (and any other
+`wrangler d1 ...` subcommand) won't be able to find your database. The
+button flow auto-provisions D1 the same way a manual `wrangler deploy`
+does, but when that happens through the dashboard/GitHub path, the
+generated database ID is only ever written into the Cloudflare dashboard --
+not back into this repo's `wrangler.toml` -- and Wrangler's `d1 execute` /
+`d1 migrations apply` commands currently can't resolve an auto-provisioned
+database by name alone, only by ID. If you need to run these locally:
+
+1. Cloudflare dashboard -> Workers & Pages -> your Worker -> Settings ->
+   Bindings -> copy the D1 database's ID.
+2. Add it to the root `wrangler.toml`'s `[[d1_databases]]` block as
+   `database_id = "..."`.
+
+Not needed for the Worker itself to work -- `ensureSchema()` creates and
+seeds the tables at runtime regardless. This is only for using the CLI
+migration scripts against that same database afterward.
