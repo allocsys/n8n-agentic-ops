@@ -3,8 +3,6 @@
 [![CI](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/live_demo-allocsys.github.io-blue)](https://allocsys.github.io/n8n-agentic-ops/)
 
-**[→ View the live architecture walkthrough](https://allocsys.github.io/n8n-agentic-ops/)** — diagrams, routing outcomes, and design rationale, rendered.
-
 | Deploy the CRM backend | Deploy your own n8n |
 |---|---|
 | [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allocsys/n8n-agentic-ops) |
