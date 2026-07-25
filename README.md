@@ -1,6 +1,9 @@
 # Agentic Multi-Channel Triage & Ops Automation (n8n)
 
 [![CI](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/live_demo-allocsys.github.io-blue)](https://allocsys.github.io/n8n-agentic-ops/)
+
+**[→ View the live architecture walkthrough](https://allocsys.github.io/n8n-agentic-ops/)** — diagrams, routing outcomes, and design rationale, rendered.
 
 | Deploy the CRM backend | Deploy your own n8n |
 |---|---|
