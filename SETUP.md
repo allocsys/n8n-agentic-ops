@@ -63,6 +63,45 @@ a sheet. No Telegram, WhatsApp, Drive, or multi-provider fallback.
 That's it — Gmail messages now get triaged, drafted, and logged, using a
 single LLM provider, with no Telegram/WhatsApp/Drive accounts required.
 
+## Dashboard, reachable from both deployments
+
+The CRM Worker serves a live read-only dashboard (contacts + recent
+tickets) at its own root -- open `https://your-worker.workers.dev/` in a
+browser any time. To reach that same dashboard from your Render n8n URL
+too (handy if that's the link you actually share with a team):
+
+1. **Import `dashboard-proxy.json`** the same way you imported
+   `workflow.json` (Workflows → Import from File).
+2. On its **Fetch CRM Dashboard HTML** node, attach the same **CRM API
+   Key** credential you already created for the main workflow's CRM
+   Lookup tool (step 7 above) -- reuse it, don't create a new one.
+3. **Publish** this workflow too.
+4. Visit `https://your-n8n-instance.onrender.com/webhook/dashboard`.
+
+This isn't a second dashboard or a cached copy -- the webhook proxies the
+exact same live request to the Worker's `/` route, so both URLs always
+show identical, real-time data straight from D1.
+
+### Locking down the dashboard
+
+By default both doors are open (no `CRM_TOKEN` on the Worker → its `/`
+route is public; the proxy webhook ships with Authentication set to
+None). If you set `CRM_TOKEN` on the Worker for production, match it on
+the n8n side too, or the proxy becomes a public backdoor around your
+newly-locked Worker:
+
+- On the **Dashboard Request** webhook node, switch Authentication to
+  **Header Auth** and create a credential whose header value equals your
+  `CRM_TOKEN`.
+- The **Fetch CRM Dashboard HTML** node already sends that same value
+  onward to the Worker via the CRM API Key credential from step 2, so
+  once both are set the whole path -- browser → n8n webhook → Worker --
+  is consistently gated on one secret.
+
+There's no way to make n8n read the Worker's env var and flip this
+automatically; it's a manual pairing step, the same as every other
+optional gate in this repo.
+
 ## Optional add-ons
 
 Each of these turns on independently — set the credential/env var and it
