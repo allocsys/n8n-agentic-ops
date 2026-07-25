@@ -1,5 +1,7 @@
 # Agentic Multi-Channel Triage & Ops Automation (n8n)
 
+[![CI](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml)
+
 A reference n8n workflow for a common services-business need: a shared inbox
 gets messages that need to be **read, classified, logged, and either
 answered or escalated** — without a human manually triaging every message.
