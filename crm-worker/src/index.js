@@ -162,12 +162,16 @@ async function renderDashboard(env) {
 
 export default {
   async fetch(request, env) {
-    await ensureSchema(env);
-    const url = new URL(request.url);
-
+    // Auth check comes first, deliberately -- before ensureSchema() touches
+    // the DB. Schema init/seeding is idempotent and cheap once memoized,
+    // but an unauthenticated request shouldn't trigger any DB work at all
+    // when CRM_TOKEN is set, not even on the very first cold-start request.
     if (!authOk(request, env)) {
       return new Response("Unauthorized", { status: 401 });
     }
+
+    await ensureSchema(env);
+    const url = new URL(request.url);
 
     // GET /  -- human-readable dashboard over the same D1 data
     if (request.method === "GET" && url.pathname === "/") {
