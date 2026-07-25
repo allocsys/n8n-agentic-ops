@@ -46,7 +46,7 @@ jobs:
         run: node -e "JSON.parse(require('fs').readFileSync('dashboard-proxy.json', 'utf8')); console.log('dashboard-proxy.json OK')"
 
   n8n-host-docker-build:
-    name: n8n-host · docker build check (build only, no push)
+    name: n8n-host · docker build + startup smoke test (no push)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,5 +59,45 @@ jobs:
         with:
           context: n8n-host
           push: false
+          load: true
+          tags: n8n-host:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Building only proves the Dockerfile compiles -- it does NOT prove
+      # render-entrypoint.sh (or the base n8n image's own entrypoint path,
+      # which has moved between /docker-entrypoint.sh and
+      # /usr/local/bin/docker-entrypoint.sh across n8n Docker image
+      # versions historically) still works at container start. Actually
+      # run it, with the same env vars render.yaml provides, and fail CI
+      # if the container exits or n8n never comes up.
+      - name: Smoke test -- container actually starts n8n
+        run: |
+          docker run -d --name n8n-smoke -p 5678:5678 \
+            -e RENDER_EXTERNAL_HOSTNAME=n8n-smoke.example.com \
+            -e RENDER_EXTERNAL_URL=https://n8n-smoke.example.com \
+            -e N8N_ENCRYPTION_KEY=ci-smoke-test-key \
+            -e N8N_BASIC_AUTH_ACTIVE=false \
+            n8n-host:ci
+
+          for i in $(seq 1 30); do
+            if ! docker inspect -f '{{.State.Running}}' n8n-smoke 2>/dev/null | grep -q true; then
+              echo "::error::container exited early"
+              docker logs n8n-smoke || true
+              exit 1
+            fi
+            if curl -sf http://localhost:5678/healthz >/dev/null 2>&1; then
+              echo "n8n came up healthy after ${i}s"
+              docker logs n8n-smoke
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "::error::n8n never became healthy within timeout"
+          docker logs n8n-smoke || true
+          exit 1
+
+      - name: Clean up
+        if: always()
+        run: docker rm -f n8n-smoke || true
