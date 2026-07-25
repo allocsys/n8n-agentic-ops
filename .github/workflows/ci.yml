@@ -18,22 +18,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      # crm-worker has no committed package-lock.json yet, so setup-node's
-      # built-in npm cache can't be used (it requires a lockfile to key
-      # on). Cache ~/.npm manually instead, keyed on package.json. Once a
-      # lockfile is committed, switch to setup-node's cache: npm option
-      # keyed on crm-worker/package-lock.json for a more precise cache.
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-crm-worker-${{ hashFiles('crm-worker/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-crm-worker-
+          cache: npm
+          cache-dependency-path: crm-worker/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
         run: npm test
