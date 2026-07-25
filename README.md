@@ -1,8 +1,10 @@
 # Agentic Multi-Channel Triage & Ops Automation (n8n)
 
 [![CI](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml)
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allocsys/n8n-agentic-ops)
+
+| Deploy the CRM backend | Deploy your own n8n |
+|---|---|
+| [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allocsys/n8n-agentic-ops) |
 
 A reference n8n workflow for a common services-business need: a shared inbox
 gets messages that need to be **read, classified, logged, and either
