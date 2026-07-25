@@ -43,12 +43,16 @@ jobs:
 
       - name: Commit and push lockfile if changed
         run: |
-          if git diff --quiet -- package-lock.json; then
-            echo "package-lock.json unchanged, nothing to commit."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
+          # git diff (unstaged) ignores untracked files, so a first-ever
+          # lockfile generation would look like "no changes" and get
+          # skipped. Checking the index (--cached) after `git add`
+          # correctly detects new files too, not just modified ones.
+          if git diff --cached --quiet -- package-lock.json; then
+            echo "package-lock.json unchanged, nothing to commit."
+            exit 0
+          fi
           git commit -m "chore(crm-worker): generate/update package-lock.json [skip ci]"
           git push origin HEAD:${{ github.event.inputs.branch }}
