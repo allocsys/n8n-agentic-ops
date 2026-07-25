@@ -180,6 +180,11 @@ each attachment gets its own row in an `Attachments` tab (`messageId`,
 - `mock/` — zero-credential version of the workflow (`workflow.mock.json`)
   plus sample trigger payloads, for demoing or offline-testing the logic
   without any live accounts. See `mock/README.md`.
+- `dashboard-proxy.json` — a second, small importable workflow that
+  exposes the CRM Worker's live dashboard (contacts + tickets) at the
+  Render n8n instance's own URL too, by proxying the Worker's `/` route.
+  Same live data either way, not a copy. See SETUP.md's "Dashboard,
+  reachable from both deployments" section.
 
 ## Requirements to run
 
