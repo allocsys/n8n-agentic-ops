@@ -1,0 +1,71 @@
+{
+  "name": "Dashboard Proxy (Render \u2192 CRM Worker)",
+  "nodes": [
+    {
+      "id": "dashboard-webhook",
+      "name": "Dashboard Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [ -400, 0 ],
+      "webhookId": "6f9d6f2e-8e6d-4d6a-9a0e-dashboard-proxy",
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dashboard",
+        "responseMode": "responseNode",
+        "authentication": "none",
+        "options": {}
+      },
+      "notes": "Public by default, matching the CRM Worker's own dev-mode default (open when CRM_TOKEN is unset on the Worker). If you set CRM_TOKEN for production, also switch this node's Authentication to Header Auth and attach a credential whose value matches CRM_TOKEN -- see SETUP.md's 'Locking down the dashboard' section. n8n can't auto-detect the Worker's env var and flip this for you; it's a matching manual step, same pattern as every other optional gate in this repo (Drive, LINE/Telegram/WhatsApp ops alerts)."
+    },
+    {
+      "id": "fetch-crm-dashboard",
+      "name": "Fetch CRM Dashboard HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ -180, 0 ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.CRM_WORKER_BASE_URL + '/' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": { "responseFormat": "text" }
+          }
+        }
+      },
+      "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "CRM API Key" } },
+      "notes": "Proxies the CRM Worker's own '/' dashboard route -- this is not a copy of the data or a cached snapshot, it's the exact same live D1-backed request the Worker itself serves at its own root. Reuses the same 'CRM API Key' credential as the CRM Lookup (tool) node in the main workflow.json, so if you've already set that up there's nothing new to create here. If CRM_TOKEN isn't set on the Worker, this header is simply ignored (see authOk() in crm-worker/src/index.js), so it's safe to always attach regardless of whether the Worker currently requires it."
+    },
+    {
+      "id": "respond-dashboard-html",
+      "name": "Return Dashboard HTML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [ 40, 0 ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.data }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Content-Type", "value": "text/html; charset=utf-8" }
+            ]
+          }
+        }
+      },
+      "notes": "Returns the proxied HTML byte-for-byte with the same Content-Type the Worker itself would send. $json.data is the field the preceding HTTP Request node puts its Text-format response body into."
+    }
+  ],
+  "connections": {
+    "Dashboard Request": {
+      "main": [ [ { "node": "Fetch CRM Dashboard HTML", "type": "main", "index": 0 } ] ]
+    },
+    "Fetch CRM Dashboard HTML": {
+      "main": [ [ { "node": "Return Dashboard HTML", "type": "main", "index": 0 } ] ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
