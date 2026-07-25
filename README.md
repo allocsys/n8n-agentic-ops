@@ -1,6 +1,8 @@
 # Agentic Multi-Channel Triage & Ops Automation (n8n)
 
 [![CI](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/allocsys/n8n-agentic-ops/actions/workflows/ci.yml)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allocsys/n8n-agentic-ops)
 
 A reference n8n workflow for a common services-business need: a shared inbox
 gets messages that need to be **read, classified, logged, and either
@@ -23,18 +25,10 @@ triage/routing logic (`mock/workflow.mock.json`) you can import into a free
 local n8n instance and execute immediately, no Gmail/Telegram/WhatsApp/CRM/
 LLM accounts required.
 
-**Want the real CRM backend running live in one click?**
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/allocsys/n8n-agentic-ops)
-
-Spins up the CRM stand-in (API + dashboard) in your own Cloudflare account
+**Want the real CRM backend running live in one click?** Use the Cloudflare badge above. It spins up the CRM stand-in (API + dashboard) in your own Cloudflare account
 with no manual setup. Details: [`crm-worker/README.md`](crm-worker/README.md).
 
-**Want your own n8n running in one click, too?**
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allocsys/n8n-agentic-ops)
-
-Spins up a real n8n instance (no server, no Docker CLI) so you can import
+**Want your own n8n running in one click, too?** Use the Render badge above. It spins up a real n8n instance (no server, no Docker CLI) so you can import
 `workflow.json` and use n8n's native OAuth "Connect" buttons for
 Gmail/Drive/Sheets. Telegram, WhatsApp, and Drive are now optional —
 skip the accounts you don't want (see Requirements below). Details:
